@@ -1,0 +1,53 @@
+name: Release to Beta 🚀
+
+on:
+  push:
+    branches: ["beta"]
+
+jobs:
+  beta:
+
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Git Checkout 🔀
+      uses: actions/checkout@v3
+
+    - name: Setup PHP 🐘
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.3'
+
+    - name: Install Composer Packages 🎵
+      run: composer install -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
+
+    - name: Prepare Laravel Application
+      run: |
+        touch database/database.sqlite
+
+    - name: Run PHPUnit Tests 🧪
+      run: vendor/bin/pest
+
+    - name: Install PNPM 📚
+      uses: pnpm/action-setup@v2
+      id: pnpm-install
+      with:
+        version: 7
+
+    - name: Use Node.js 20.x 🟢
+      uses: actions/setup-node@v3
+      with:
+        node-version: 20.x
+
+    - name: PNPM dependencies
+      run: pnpm install --no-frozen-lockfile
+
+    - name: Semantic Release 🚀
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      id: semantic
+      run: |
+        output=$(npx semantic-release)
+        echo "$output"
+        new_sha=$(echo "$output" | grep -oP 'Created tag \K[^ ]+' | xargs git rev-parse)
+        echo "NEW_SHA=$new_sha" >> $GITHUB_OUTPUT

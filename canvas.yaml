@@ -1,0 +1,27 @@
+preset: package
+
+namespace: Actengage\Mailbox
+user-auth-model: App\Models\User
+
+paths:
+  src: src
+  resource: resources
+
+factory:
+  path: database/factories
+
+migration:
+  path: database/migrations
+  prefix: ''
+
+console:
+  namespace: Actengage\Mailbox\Console
+
+model:
+  namespace: Actengage\Mailbox\Models
+
+provider:
+  namespace: Actengage\Mailbox\Providers
+
+testing:
+  namespace: Actengage\Mailbox\Tests

@@ -1,0 +1,61 @@
+{
+    "name": "actengage/mailbox",
+    "description": "The official package to sync Exchange mailboxes.",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Justin Kimbrell",
+            "email": "jkimbrell@actengage.com"
+        }
+    ],
+    "scripts": {
+        "test": "phpunit"
+    },
+    "require": {
+        "php": "^8.2",
+        "laravel/framework": "^11.0",
+        "microsoft/microsoft-graph": "^2.26",
+        "php-http/promise": "^1.2",
+        "spatie/laravel-data": "^4.13",
+        "spatie/laravel-typescript-transformer": "^2.5"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^9.5",
+        "laravel/pint": "^1.8",
+        "pestphp/pest": "^3.7",
+        "pestphp/pest-plugin-laravel": "^3.0",
+        "mockery/mockery": "^1.6",
+        "orchestra/canvas": "^9.2"
+    },
+    "autoload": {
+        "psr-4": {
+            "Actengage\\Mailbox\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4" : {
+            "Tests\\": "tests",
+            "Database\\Factories\\": "database/factories"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Actengage\\Mailbox\\ServiceProvider"
+            ],
+            "aliases": {
+                "ClientService": "Actengage\\Mailbox\\Facades\\ClientService",
+                "FolderService": "Actengage\\Mailbox\\Facades\\FolderService",
+                "MessageService": "Actengage\\Mailbox\\Facades\\MessageService",
+                "SubscriptionService": "Actengage\\Mailbox\\Facades\\SubscriptionService"
+            }
+        }
+    },
+    "config": {
+        "allow-plugins": {
+            "pestphp/pest-plugin": true,
+            "php-http/discovery": true,
+            "tbachert/spi": true
+        }
+    }
+}

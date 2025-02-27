@@ -1,0 +1,18 @@
+{
+	"name": "mailbox",
+	"private": true,
+	"version": "0.0.0-development",
+	"type": "module",
+	"scripts": {
+		"prepare": "husky"
+	},
+	"dependencies": {
+		"@commitlint/cli": "^19.5.0",
+		"@commitlint/config-conventional": "^19.5.0",
+		"@semantic-release/changelog": "^6.0.3",
+		"@semantic-release/git": "^10.0.1",
+		"dotenv": "^16.4.5",
+		"husky": "^9.1.6",
+		"semantic-release": "^24.1.2"
+	}
+}
