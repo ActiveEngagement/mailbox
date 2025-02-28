@@ -8,7 +8,21 @@ use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Spatie\TypeScriptTransformer\Attributes\LiteralTypeScriptType;
+use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
+#[TypeScript]
+#[LiteralTypeScriptType([
+    'id' => 'number',
+    'mailbox_id' => 'number',
+    'external_id' => 'string',
+    'resource' => 'string',
+    'change_type' => 'string',
+    'notification_url' => 'string',
+    'created_at' => 'string',
+    'updated_at' => 'string',
+    'mailbox?' => 'Mailbox',
+])]
 #[ObservedBy(MailboxSubscriptionObserver::class)]
 class MailboxSubscription extends Model
 {

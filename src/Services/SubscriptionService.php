@@ -131,6 +131,8 @@ class SubscriptionService
             ->subscriptions()
             ->bySubscriptionId($id)
             ->delete()
-            ->wait();
+            ->then(null, function() {
+                //
+            });
     }
 }

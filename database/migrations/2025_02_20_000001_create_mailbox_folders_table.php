@@ -13,17 +13,19 @@ return new class extends Migration
     {
         Schema::create('mailbox_folders', function (Blueprint $table) {
             $table->integerIncrements('id');
-            $table->string('external_id')->unique();
             $table->integer('mailbox_id')->unsigned();
             $table->foreign('mailbox_id')->references('id')->on('mailboxes')->cascadeOnDelete()->cascadeOnUpdate();
             $table->integer('parent_id')->unsigned()->nullable();
             $table->foreign('parent_id')->references('id')->on('mailbox_folders')->cascadeOnDelete()->cascadeOnUpdate();
+            $table->string('external_id')->unique();
             $table->string('name');
+            $table->boolean('is_hidden')->default(false);
             $table->boolean('is_favorite')->default(false);
             $table->timestamps();
 
             $table->index(['mailbox_id', 'parent_id']);
             $table->index(['mailbox_id', 'name']);
+            $table->index(['mailbox_id', 'is_hidden']);
             $table->index(['mailbox_id', 'is_favorite']);
         });
     }

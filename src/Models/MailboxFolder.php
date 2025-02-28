@@ -5,8 +5,24 @@ namespace Actengage\Mailbox\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Microsoft\Graph\Generated\Models\MailFolder;
+use Spatie\TypeScriptTransformer\Attributes\LiteralTypeScriptType;
+use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
+#[TypeScript]
+#[LiteralTypeScriptType([
+    'id' => 'number',
+    'mailbox_id' => 'number',
+    'parent_id?' => 'number',
+    'external_id' => 'string',
+    'name' => 'string',
+    'created_at' => 'string',
+    'updated_at' => 'string',
+    'mailbox?' => 'Mailbox',
+    'parent?' => 'MailboxFolder',
+    'messages?' => 'MailboxMessage[]',
+])]
 class MailboxFolder extends Model
 {
     /**
@@ -37,6 +53,16 @@ class MailboxFolder extends Model
     public function parent(): BelongsTo
     {
         return $this->belongsTo(static::class, 'parent_id');
+    }
+
+    /**
+     * Get the messages that belong to folder.
+     *
+     * @return HasMany<MailboxMessage>
+     */
+    public function messages(): HasMany
+    {
+        return $this->hasMany(MailboxMessage::class, 'folder_id');
     }
 
     /**

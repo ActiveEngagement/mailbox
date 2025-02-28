@@ -171,6 +171,7 @@ class FolderService
 
         $model->fill([
             'name' => $folder->getDisplayName(),
+            'is_hidden' => $folder->getIsHidden(),
         ]);
 
         if($folder->getParentFolderId()) {

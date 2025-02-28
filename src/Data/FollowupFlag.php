@@ -8,7 +8,7 @@ use DateTime;
 use Microsoft\Graph\Generated\Models\FollowupFlag as BaseFollowupFlag;
 use Spatie\LaravelData\Data;
 
-/** @typescript */
+/** @typescript FollowupFlag */
 class FollowupFlag extends Data
 {
     public function __construct(

@@ -7,7 +7,20 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Spatie\TypeScriptTransformer\Attributes\LiteralTypeScriptType;
+use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
+#[TypeScript]
+#[LiteralTypeScriptType([
+    'id' => 'number',
+    'email' => 'string',
+    'connection' => 'string',
+    'created_at' => 'string',
+    'updated_at' => 'string',
+    'folders?' => 'MailboxFolder[]',
+    'messages?' => 'MailboxMessage[]',
+    'subscriptions?' => 'MailboxSubscription[]'
+])]
 class Mailbox extends Model
 {    
     use HasFactory;

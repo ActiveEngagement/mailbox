@@ -6,7 +6,7 @@ use InvalidArgumentException;
 use Spatie\LaravelData\Data;
 use Stringable;
 
-/** @typescript */
+/** @typescript EmailAddress */
 class EmailAddress extends Data implements Stringable
 {
     public function __construct(
@@ -26,13 +26,12 @@ class EmailAddress extends Data implements Stringable
     {
         preg_match('/([^<]+)?(?:<(.+)>)?/', $email, $matches);
 
-        if(count($matches) === 3) {
+        if (count($matches) === 3) {
             return static::from([
                 'email' => $matches[2],
                 'name' => $matches[1],
             ]);
-        }
-        else if(count($matches) === 2) {
+        } else if (count($matches) === 2) {
             return static::from([
                 'email' => $matches[1],
             ]);
@@ -48,7 +47,7 @@ class EmailAddress extends Data implements Stringable
      */
     public function __toString(): string
     {
-        if($this->name) {
+        if ($this->name) {
             return "$this->name<$this->email>";
         }
 

@@ -7,7 +7,23 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Storage;
+use Spatie\TypeScriptTransformer\Attributes\LiteralTypeScriptType;
+use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
+#[TypeScript]
+#[LiteralTypeScriptType([
+    'id' => 'number',
+    'mailbox_id' => 'number',
+    'disk' => 'string',
+    'size' => 'number',
+    'content_type' => 'string',
+    'path' => 'string',
+    'last_modified_at' => 'string',
+    'created_at' => 'string',
+    'updated_at' => 'string',
+    'mailbox?' => 'Mailbox',
+    'message?' => 'MailboxMessage',
+])]
 class MailboxMessageAttachment extends Model
 {
     use HasFactory;

@@ -14,7 +14,38 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Spatie\TypeScriptTransformer\Attributes\LiteralTypeScriptType;
+use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
+#[TypeScript]
+#[LiteralTypeScriptType([
+    'id' => 'number',
+    'mailbox_id' => 'number',
+    'folder_id' => 'number',
+    'external_id' => 'string',
+    'conversation_id' => 'string',
+    'conversation_index' => 'string',
+    'is_pinned' => 'boolean',
+    'is_read' => 'boolean',
+    'is_draft' => 'boolean',
+    'flag' => 'FollowupFlag',
+    'importance' => 'Importance',
+    'from' => 'string',
+    'to' => 'string[]',
+    'cc' => 'string[]',
+    'bcc' => 'string[]',
+    'reply_to' => 'string[]',
+    'subject' => 'string',
+    'body' => 'string',
+    'body_preview?' => 'string',
+    'received_at' => 'string',
+    'sent_at?' => 'string',
+    'created_at' => 'string',
+    'updated_at' => 'string',
+    'mailbox?' => 'Mailbox',
+    'folder?' => 'MailboxFolder',
+    'attachments?' => 'MailboxMessageAttachment[]',
+])]
 class MailboxMessage extends Model
 {
     use HasFactory;
@@ -29,6 +60,7 @@ class MailboxMessage extends Model
         'hash',
         'conversation_id',
         'conversation_index',
+        'is_pinned',
         'is_read',
         'is_draft',
         'flag',
