@@ -17,6 +17,8 @@ use Spatie\TypeScriptTransformer\Attributes\TypeScript;
     'parent_id?' => 'number',
     'external_id' => 'string',
     'name' => 'string',
+    'is_hidden' => 'boolean',
+    'is_favorite' => 'boolean',
     'created_at' => 'string',
     'updated_at' => 'string',
     'mailbox?' => 'Mailbox',
@@ -33,6 +35,8 @@ class MailboxFolder extends Model
     protected $fillable = [
         'external_id',
         'name',
+        'is_hidden',
+        'is_favorite'
     ];
 
     /**

@@ -4,6 +4,7 @@ namespace Actengage\Mailbox\Casts;
 
 use Actengage\Mailbox\Data\FollowupFlag as FollowupFlagData;
 use Actengage\Mailbox\Enums\FollowupFlagStatus;
+use Carbon\Carbon;
 use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
 use Illuminate\Database\Eloquent\Model;
 use InvalidArgumentException;
@@ -23,9 +24,9 @@ class FollowupFlag implements CastsAttributes
     {
         return FollowupFlagData::from([
             'status' => $value ?? FollowupFlagStatus::NotFlagged,
-            'startDateTime' => $attributes['started_at'],
-            'dueDateTime' => $attributes['due_at'],
-            'completedDateTime' => $attributes['completed_at'],
+            'startDateTime' => Carbon::parse($attributes['started_at']),
+            'dueDateTime' => Carbon::parse($attributes['due_at']),
+            'completedDateTime' => Carbon::parse($attributes['completed_at']),
         ]);
     }
  
