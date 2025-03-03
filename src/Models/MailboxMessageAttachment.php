@@ -3,6 +3,7 @@
 namespace Actengage\Mailbox\Models;
 
 use Database\Factories\MailboxMessageAttachmentFactory;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -14,10 +15,12 @@ use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 #[LiteralTypeScriptType([
     'id' => 'number',
     'mailbox_id' => 'number',
-    'disk' => 'string',
+    'name' => 'string',
     'size' => 'number',
     'content_type' => 'string',
+    'disk' => 'string',
     'path' => 'string',
+    'url' => 'string',
     'last_modified_at' => 'string',
     'created_at' => 'string',
     'updated_at' => 'string',
@@ -40,6 +43,15 @@ class MailboxMessageAttachment extends Model
         'content_type',
         'path',
         'last_modified_at'
+    ];
+
+    /**
+     * The attributes that are appended.
+     *
+     * @var array<int, string>
+     */
+    protected $appends = [
+        'url'
     ];
 
     /**
@@ -79,9 +91,11 @@ class MailboxMessageAttachment extends Model
      *
      * @return string
      */
-    public function url(): string
+    public function url(): Attribute
     {
-        return Storage::disk($this->disk)->url($this->path);
+        return Attribute::make(
+            get: fn() => Storage::disk($this->disk)->url($this->path)
+        );
     }
 
     /**

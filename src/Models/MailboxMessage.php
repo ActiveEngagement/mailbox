@@ -9,6 +9,7 @@ use Actengage\Mailbox\Casts\Importance;
 use Actengage\Mailbox\Casts\Recipient;
 use Actengage\Mailbox\Casts\Recipients;
 use Database\Factories\MailboxMessageFactory;
+use DateTimeInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -96,11 +97,11 @@ class MailboxMessage extends Model
             'importance' => Importance::class,
             'is_read' => 'boolean',
             'is_draft' => 'boolean',
-            'received_at' => 'datetime:Y-m-d H:i:s',
-            'due_at' => 'datetime:Y-m-d H:i:s',
-            'started_at' => 'datetime:Y-m-d H:i:s',
-            'completed_at' => 'datetime:Y-m-d H:i:s',
-            'sent_at' => 'datetime:Y-m-d H:i:s',
+            'received_at' => 'datetime:c',
+            'due_at' => 'datetime:c',
+            'started_at' => 'datetime:c',
+            'completed_at' => 'datetime:c',
+            'sent_at' => 'datetime:c',
         ];
     }
 
@@ -157,6 +158,14 @@ class MailboxMessage extends Model
     {
         return rtrim(sprintf('%s/%s/%s', $this->mailbox->email, $this->hash, $filename), '/');
     }
+
+    // /**
+    //  * Prepare a date for array / JSON serialization.
+    //  */
+    // protected function serializeDate(DateTimeInterface $date): string
+    // {
+    //     return $date->format('Y-m-d');
+    // }
 
     /**
      * Create a new factory.
