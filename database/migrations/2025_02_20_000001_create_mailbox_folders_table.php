@@ -25,6 +25,7 @@ return new class extends Migration
 
             $table->index(['mailbox_id', 'parent_id']);
             $table->index(['mailbox_id', 'name']);
+            $table->index(['mailbox_id', 'name', 'external_id']);
             $table->index(['mailbox_id', 'is_hidden']);
             $table->index(['mailbox_id', 'is_favorite']);
         });

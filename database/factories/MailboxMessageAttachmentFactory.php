@@ -2,16 +2,11 @@
 
 namespace Database\Factories;
 
-use Actengage\Mailbox\Enums\Importance;
 use Actengage\Mailbox\Models\Mailbox;
 use Actengage\Mailbox\Models\MailboxMessage;
 use Actengage\Mailbox\Models\MailboxMessageAttachment;
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Microsoft\Graph\Generated\Models\BodyType;
-use Microsoft\Graph\Generated\Models\DateTimeTimeZone;
-use Microsoft\Graph\Generated\Models\FollowupFlag;
-use Microsoft\Graph\Generated\Models\FollowupFlagStatus;
-use Microsoft\Graph\Generated\Models\ItemBody;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * @template TModel of \Actengage\Mailbox\MailboxMessage
@@ -37,15 +32,29 @@ class MailboxMessageAttachmentFactory extends Factory
         $mailbox = Mailbox::factory()->create();
         $message = MailboxMessage::factory()->for($mailbox)->create();
 
+        $filename = str()->random(5) . '.html';
+
         return [
             'mailbox_id' => $mailbox,
             'message_id' => $message,
-            'name' => 'test.html',
-            'size' => 100,
+            'name' => $filename,
+            'size' => 0,
             'content_type' => 'text/html',
             'disk' => 'public',
-            'path' => 'test',
+            'path' => "$message->hash/$filename",
             'last_modified_at' => now()
         ];
+    }
+
+    public function contents(string $contents)
+    {
+        return $this->state(function(array $attributes) use ($contents) {
+            Storage::fake($attributes['disk']);
+            Storage::disk($attributes['disk'])->put($attributes['path'], $contents);
+            
+            return [
+                'size' =>  Storage::disk($attributes['disk'])->size($attributes['path'])
+            ];
+        });
     }
 }

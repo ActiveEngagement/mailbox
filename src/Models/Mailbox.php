@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Cache;
 use Spatie\TypeScriptTransformer\Attributes\LiteralTypeScriptType;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
@@ -52,7 +53,7 @@ class Mailbox extends Model
      */
     public function messages(): HasMany
     {
-        return $this->hasMany(MailboxMessage::class);
+        return $this->hasMany(MailboxMessage::class, 'mailbox_id');
     }
 
     /**
@@ -64,17 +65,45 @@ class Mailbox extends Model
     {
         return $this->hasMany(MailboxSubscription::class);
     }
-
+    
     /**
      * Scope the query for the give email addresses.
      *
      * @param Builder $query
-     * @param string ...$email
+     * @param Mailbox|string ...$email
      * @return void
      */
-    public function scopeEmail(Builder $query, string ...$email): void
+    public function scopeEmail(Builder $query, Mailbox|string ...$email): void
     {
-        $query->whereIn('email', $email);
+        $query->whereIn('email', collect($email)->map(function(Mailbox|string $mailbox) {
+            return $mailbox instanceof Mailbox ? $mailbox->email : $mailbox;
+        }));
+    }
+
+    /**
+     * Scope the query to the given mailboxes.
+     *
+     * @param Builder $query
+     * @param Mailbox|string ...$mailbox
+     * @return void
+     */
+    public function scopeMailbox(Builder $query, Mailbox|string ...$mailbox): void
+    {
+        $query->whereIn('id', collect($mailbox)->map(function(Mailbox|string $mailbox) {
+            return $mailbox instanceof Mailbox ? $mailbox->getKey() : $mailbox;
+        }));
+    }
+
+    /**
+     * Get the Drafts folder.
+     *
+     * @return MailboxFolder|null
+     */
+    public function draftsFolder(): ?MailboxFolder
+    {
+        return Cache::rememberForever("mailbox.{$this->id}.folders.drafts", function() {
+            return $this->folders()->whereName('Drafts')->first();
+        });
     }
 
     /**

@@ -1,6 +1,7 @@
 <?php
 
 use Actengage\Mailbox\Models\MailboxMessageAttachment;
+use Illuminate\Support\Facades\Storage;
 
 it('belongs to a mailbox and message of that mailbox', function() {
     $model = MailboxMessageAttachment::factory()->create();
@@ -9,5 +10,9 @@ it('belongs to a mailbox and message of that mailbox', function() {
 });
 
 it('has an absolute storage url', function() {
-    expect(MailboxMessageAttachment::factory()->create()->url())->toBeString();
+    $attachment = MailboxMessageAttachment::factory()->create([
+        'name' => 'test.html'
+    ]);
+
+    expect($attachment->url)->toBe(Storage::disk($attachment->disk)->url($attachment->path));
 });

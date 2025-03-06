@@ -2,11 +2,14 @@
 
 namespace Actengage\Mailbox\Models;
 
+use Actengage\Mailbox\Observers\MailboxFolderObserver;
+use Database\Factories\MailboxFolderFactory;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Microsoft\Graph\Generated\Models\MailFolder;
 use Spatie\TypeScriptTransformer\Attributes\LiteralTypeScriptType;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
@@ -25,8 +28,11 @@ use Spatie\TypeScriptTransformer\Attributes\TypeScript;
     'parent?' => 'MailboxFolder',
     'messages?' => 'MailboxMessage[]',
 ])]
+#[ObservedBy(MailboxFolderObserver::class)]
 class MailboxFolder extends Model
 {
+    use HasFactory;
+    
     /**
      * The attributes that are mass assignable.
      *
@@ -70,30 +76,54 @@ class MailboxFolder extends Model
     }
 
     /**
-     * Scope the query using the MailFolder instance.
+     * Scope the query to the given folders.
      *
      * @param Builder $query
-     * @param MailFolder|string ...$id
+     * @param MailboxFolder|string ...$folder
      * @return void
      */
-    public function scopeFolder(Builder $query, MailFolder|string ...$id): void
+    public function scopeFolder(Builder $query, MailboxFolder|string ...$folder): void
     {
-        $query->whereIn('external_id', collect($id)->map(function(MailFolder|string $id) {
-            return $id instanceof MailFolder ? $id->getId() : $id;
+        $query->whereIn('id', collect($folder)->map(function(MailboxFolder|string $folder) {
+            return $folder instanceof MailboxFolder ? $folder->getKey() : $folder;
         }));
     }
 
     /**
-     * Scope the query to the parent id.
+     * Scope the query to the given parent folders.
      *
      * @param Builder $query
-     * @param MailFolder|string ...$id
+     * @param MailboxFolder|string ...$folder
      * @return void
      */
-    public function scopeParent(Builder $query, MailFolder|string ...$id): void
+    public function scopeParent(Builder $query, MailboxFolder|string ...$folder): void
     {
-        $query->whereIn('external_id', collect($id)->map(function(MailFolder|string $id) {
-            return $id instanceof MailFolder ? $id->getParentFolderId() : $id;
+        $query->whereIn('parent_id', collect($folder)->map(function(MailboxFolder|string $folder) {
+            return $folder instanceof MailboxFolder ? $folder->getKey() : $folder;
         }));
+    }
+
+    /**
+     * Scope the query to the given external id.
+     *
+     * @param Builder $query
+     * @param MailboxFolder|string ...$externalId
+     * @return void
+     */
+    public function scopeExternalId(Builder $query, MailboxFolder|string ...$folder): void
+    {
+        $query->whereIn('external_id', collect($folder)->map(function(MailboxFolder|string $folder) {
+            return $folder instanceof MailboxFolder ? $folder->external_id : $folder;
+        }));
+    }
+
+    /**
+     * Create a new factory.
+     *
+     * @return MailboxFolderFactory
+     */
+    protected static function newFactory(): MailboxFolderFactory
+    {
+        return MailboxFolderFactory::new();
     }
 }

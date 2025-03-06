@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use Actengage\Mailbox\Enums\Importance;
 use Actengage\Mailbox\Models\Mailbox;
+use Actengage\Mailbox\Models\MailboxFolder;
 use Actengage\Mailbox\Models\MailboxMessage;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Microsoft\Graph\Generated\Models\BodyType;
@@ -54,6 +55,7 @@ class MailboxMessageFactory extends Factory
 
         return [
             'mailbox_id' => Mailbox::factory(),
+            'folder_id' => MailboxFolder::factory(),
             'external_id' => fake()->uuid(),
             'is_read' => false,
             'is_draft' => false,

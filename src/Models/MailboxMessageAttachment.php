@@ -62,7 +62,7 @@ class MailboxMessageAttachment extends Model
     public function casts(): array
     {
         return [
-            'last_modified_at' => 'timestamp',
+            'last_modified_at' => 'datetime',
         ];
     }
 
@@ -95,6 +95,30 @@ class MailboxMessageAttachment extends Model
     {
         return Attribute::make(
             get: fn() => Storage::disk($this->disk)->url($this->path)
+        );
+    }
+    
+    /**
+     * Get the contents from storage.
+     *
+     * @return string
+     */
+    public function contents(): Attribute
+    {
+        return Attribute::make(
+            get: fn() => Storage::disk($this->disk)->get($this->path)
+        );
+    }
+
+    /**
+     * Get the base64 contents from storage.
+     *
+     * @return string
+     */
+    public function base64Contents(): Attribute
+    {
+        return Attribute::make(
+            get: fn() => base64_encode($this->contents)
         );
     }
 

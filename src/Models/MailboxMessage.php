@@ -136,15 +136,45 @@ class MailboxMessage extends Model
     }
 
     /**
+     * Scope the query to the given mailboxes.
+     *
+     * @param Builder $query
+     * @param MailboxFolder|string ...$folder
+     * @return void
+     */
+    public function scopeMailbox(Builder $query, Mailbox|string ...$mailbox): void
+    {
+        $query->whereIn('mailbox_id', collect($mailbox)->map(function(Mailbox|string $mailbox) {
+            return $mailbox instanceof Mailbox ? $mailbox->getKey() : $mailbox;
+        }));
+    }
+
+    /**
+     * Scope the query to the given folders.
+     *
+     * @param Builder $query
+     * @param MailboxFolder|string ...$folder
+     * @return void
+     */
+    public function scopeFolder(Builder $query, MailboxFolder|string ...$folder): void
+    {
+        $query->whereIn('folder_id', collect($folder)->map(function(MailboxFolder|string $folder) {
+            return $folder instanceof MailboxFolder ? $folder->getKey() : $folder;
+        }));
+    }
+
+    /**
      * Scope the query to the given external ids.
      *
      * @param Builder $query
-     * @param string ...$id
+     * @param MailboxMessage|string ...$message
      * @return void
      */
-    public function scopeExternalId(Builder $query, string ...$id): void
+    public function scopeExternalId(Builder $query, MailboxMessage|string ...$message): void
     {
-        $query->whereIn('external_id', $id);
+        $query->whereIn('external_id', collect($message)->map(function(MailboxMessage|string $message) {
+            return $message instanceof MailboxMessage ? $message->external_id : $message;
+        }));
     }
 
     /**
@@ -157,6 +187,11 @@ class MailboxMessage extends Model
     public function attachmentRelativePath(?string $filename = null): string
     {
         return rtrim(sprintf('%s/%s/%s', $this->mailbox->email, $this->hash, $filename), '/');
+    }
+
+    public function resolveRouteBinding($value, $field = null)
+    {
+        return $this->where($field ?? 'id', $value)->firstOrFail(); 
     }
 
     // /**

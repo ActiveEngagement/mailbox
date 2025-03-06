@@ -8,6 +8,7 @@ use Actengage\Mailbox\Console\SetupMailbox;
 use Actengage\Mailbox\Services\ClientService;
 use Actengage\Mailbox\Services\FolderService;
 use Actengage\Mailbox\Services\MessageService;
+use Actengage\Mailbox\Services\ModelService;
 use Actengage\Mailbox\Services\SubscriptionService;
 use Illuminate\Foundation\Console\AboutCommand;
 use Illuminate\Support\ServiceProvider as BaseServiceProvider;
@@ -32,6 +33,7 @@ class ServiceProvider extends BaseServiceProvider
         $this->registerClientService();
         $this->registerFolderService();
         $this->registerMessageService();
+        $this->registerModelService();
         $this->registerSubscriptionService();
     }
 
@@ -101,6 +103,20 @@ class ServiceProvider extends BaseServiceProvider
         });
 
         $this->app->alias(MessageService::class, 'mailbox.messages');
+    }
+
+    /**
+     * Register the mdoel service.
+     *
+     * @return void
+     */
+    protected function registerModelService(): void
+    {
+        $this->app->singleton(ModelService::class, function() {
+            return new ModelService();
+        });
+
+        $this->app->alias(ModelService::class, 'mailbox.models');
     }
 
     /**

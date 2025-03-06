@@ -82,7 +82,8 @@ class FolderService
     {
         $config = new MailFoldersRequestBuilderGetRequestConfiguration(
             queryParameters: new MailFoldersRequestBuilderGetQueryParameters(
-                top: 100, expand: ['childFolders']
+                top: 100,
+                expand: ['childFolders']
             )
         );
         
@@ -176,7 +177,7 @@ class FolderService
 
         if($folder->getParentFolderId()) {
             $model->parent()->associate(
-                MailboxFolder::query()->parent($folder)->first()
+                MailboxFolder::query()->parent($folder->getParentFolderId())->first()
             );
         }
 
