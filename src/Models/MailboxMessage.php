@@ -9,12 +9,14 @@ use Actengage\Mailbox\Casts\Importance;
 use Actengage\Mailbox\Casts\Recipient;
 use Actengage\Mailbox\Casts\Recipients;
 use Database\Factories\MailboxMessageFactory;
-use DateTimeInterface;
+use Illuminate\Broadcasting\Channel;
+use Illuminate\Database\Eloquent\BroadcastsEvents;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Laravel\Scout\Searchable;
 use Spatie\TypeScriptTransformer\Attributes\LiteralTypeScriptType;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
@@ -49,7 +51,7 @@ use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 ])]
 class MailboxMessage extends Model
 {
-    use HasFactory;
+    use BroadcastsEvents, HasFactory, Searchable;
     
     /**
      * The attributes that are mass assignable.
@@ -188,19 +190,29 @@ class MailboxMessage extends Model
     {
         return rtrim(sprintf('%s/%s/%s', $this->mailbox->email, $this->hash, $filename), '/');
     }
-
-    public function resolveRouteBinding($value, $field = null)
+ 
+    /**
+     * Get the channels that model events should broadcast on.
+     *
+     * @return array<int, \Illuminate\Broadcasting\Channel|\Illuminate\Database\Eloquent\Model>
+     */
+    public function broadcastOn(string $event): array
     {
-        return $this->where($field ?? 'id', $value)->firstOrFail(); 
+        return [$this, $this->folder, $this->mailbox];
     }
 
-    // /**
-    //  * Prepare a date for array / JSON serialization.
-    //  */
-    // protected function serializeDate(DateTimeInterface $date): string
-    // {
-    //     return $date->format('Y-m-d');
-    // }
+    /**
+     * Get the indexable data array for the model.
+     *
+     * @return array
+     */
+    public function toSearchableArray(): array
+    {
+        return [
+            'from' => $this->from,
+            'subject' => $this->subject
+        ];
+    }
 
     /**
      * Create a new factory.

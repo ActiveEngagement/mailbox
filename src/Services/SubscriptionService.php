@@ -7,6 +7,7 @@ use Actengage\Mailbox\Models\Mailbox;
 use Actengage\Mailbox\Models\MailboxSubscription;
 use Http\Promise\Promise;
 use Illuminate\Support\Uri;
+use Microsoft\Graph\Generated\Models\ODataErrors\ODataError;
 use Microsoft\Graph\Generated\Models\Subscription;
 
 class SubscriptionService
@@ -51,7 +52,9 @@ class SubscriptionService
                     return;
                 }
 
-                $this->createMailboxSubscription($mailbox, $subscription);
+                return $this->createMailboxSubscription($mailbox, $subscription);
+            }, function(ODataError $e) {
+                dd($e->getError()->getMessage());
             });
     }
 

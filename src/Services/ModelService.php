@@ -42,7 +42,8 @@ class ModelService
         $model->setBody($body);
         $model->setFlag($this->makeFollowupFlagModel($message->flag));
         $model->setImportance($this->makeImportanceModel($message->importance));
-
+        $model->setIsDraft($message->is_draft);
+        
         if($message->to) {
             $model->setToRecipients(collect($message->to)->map(function(EmailAddress $value) {
                 return $this->makeRecipientModel($value);
@@ -71,7 +72,7 @@ class ModelService
             $model->setAttachments(collect($message->attachments)->map(function(MailboxMessageAttachment $attachment) {
                 return $this->makeAttachmentModel($attachment);
             })->all());
-        }        
+        }  
 
         return $model;
     }
@@ -146,7 +147,7 @@ class ModelService
         if(!$flag) {
             return null;
         }
-
+        
         $model = new FollowupFlagModel();
         $model->setCompletedDateTime($this->makeDateTimeTimeZoneModel($flag->completedDateTime));
         $model->setDueDateTime($this->makeDateTimeTimeZoneModel($flag->dueDateTime));

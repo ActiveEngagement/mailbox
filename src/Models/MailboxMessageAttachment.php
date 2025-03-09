@@ -3,11 +3,13 @@
 namespace Actengage\Mailbox\Models;
 
 use Database\Factories\MailboxMessageAttachmentFactory;
+use Illuminate\Database\Eloquent\BroadcastsEvents;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Storage;
+use Laravel\Scout\Searchable;
 use Spatie\TypeScriptTransformer\Attributes\LiteralTypeScriptType;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
@@ -29,7 +31,7 @@ use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 ])]
 class MailboxMessageAttachment extends Model
 {
-    use HasFactory;
+    use BroadcastsEvents, HasFactory, Searchable;
     
     /**
      * The attributes that are mass assignable.
@@ -120,6 +122,27 @@ class MailboxMessageAttachment extends Model
         return Attribute::make(
             get: fn() => base64_encode($this->contents)
         );
+    }
+    /**
+     * Get the channels that model events should broadcast on.
+     *
+     * @return array<int, \Illuminate\Broadcasting\Channel|\Illuminate\Database\Eloquent\Model>
+     */
+    public function broadcastOn(string $event): array
+    {
+        return [$this, $this->mailbox, $this->message];
+    }
+
+    /**
+     * Get the indexable data array for the model.
+     *
+     * @return array
+     */
+    public function toSearchableArray(): array
+    {
+        return [
+            'name' => $this->name
+        ];
     }
 
     /**

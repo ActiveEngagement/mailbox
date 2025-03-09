@@ -24,6 +24,10 @@ return new class extends Migration
             $table->string('path')->unique();
             $table->timestamp('last_modified_at');
             $table->timestamps();
+
+            // if (Schema::getConnection()->getDriverName() !== 'sqlite') {
+            //     $table->fullText(['name']);
+            // }
         });
     }
 

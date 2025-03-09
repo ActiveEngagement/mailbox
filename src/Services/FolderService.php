@@ -177,7 +177,7 @@ class FolderService
 
         if($folder->getParentFolderId()) {
             $model->parent()->associate(
-                MailboxFolder::query()->parent($folder->getParentFolderId())->first()
+                MailboxFolder::query()->externalId($folder->getParentFolderId())->first()
             );
         }
 

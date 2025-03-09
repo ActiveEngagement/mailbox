@@ -5,6 +5,7 @@ namespace Actengage\Mailbox\Models;
 use Actengage\Mailbox\Observers\MailboxFolderObserver;
 use Database\Factories\MailboxFolderFactory;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
+use Illuminate\Database\Eloquent\BroadcastsEvents;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -31,7 +32,7 @@ use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 #[ObservedBy(MailboxFolderObserver::class)]
 class MailboxFolder extends Model
 {
-    use HasFactory;
+    use BroadcastsEvents, HasFactory;
     
     /**
      * The attributes that are mass assignable.
@@ -115,6 +116,16 @@ class MailboxFolder extends Model
         $query->whereIn('external_id', collect($folder)->map(function(MailboxFolder|string $folder) {
             return $folder instanceof MailboxFolder ? $folder->external_id : $folder;
         }));
+    }
+
+    /**
+     * Get the channels that model events should broadcast on.
+     *
+     * @return array<int, \Illuminate\Broadcasting\Channel|\Illuminate\Database\Eloquent\Model>
+     */
+    public function broadcastOn(string $event): array
+    {
+        return [$this, $this->mailbox];
     }
 
     /**

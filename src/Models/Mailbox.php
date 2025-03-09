@@ -3,6 +3,7 @@
 namespace Actengage\Mailbox\Models;
 
 use Database\Factories\MailboxFactory;
+use Illuminate\Database\Eloquent\BroadcastsEvents;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -24,7 +25,7 @@ use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 ])]
 class Mailbox extends Model
 {    
-    use HasFactory;
+    use BroadcastsEvents, HasFactory;
 
     /**
      * The attributes that are mass assignable.
@@ -104,6 +105,28 @@ class Mailbox extends Model
         return Cache::rememberForever("mailbox.{$this->id}.folders.drafts", function() {
             return $this->folders()->whereName('Drafts')->first();
         });
+    }
+
+    /**
+     * Get the Sent Items folder.
+     *
+     * @return MailboxFolder|null
+     */
+    public function sentItemsFolder(): ?MailboxFolder
+    {
+        return Cache::rememberForever("mailbox.{$this->id}.folders.sentItems", function() {
+            return $this->folders()->whereName('Sent Items')->first();
+        });
+    }
+
+    /**
+     * Get the channels that model events should broadcast on.
+     *
+     * @return array<int, \Illuminate\Broadcasting\Channel|\Illuminate\Database\Eloquent\Model>
+     */
+    public function broadcastOn(string $event): array
+    {
+        return [$this];
     }
 
     /**

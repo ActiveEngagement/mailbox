@@ -2,27 +2,16 @@
 
 namespace Actengage\Mailbox\Services;
 
-use Actengage\Mailbox\Data\EmailAddress;
-use Actengage\Mailbox\Data\FollowupFlag;
-use Actengage\Mailbox\Enums\FollowupFlagStatus;
-use Actengage\Mailbox\Enums\Importance;
 use Actengage\Mailbox\Facades\Folders;
+use Actengage\Mailbox\Facades\Models;
 use Actengage\Mailbox\Models\Mailbox;
 use Actengage\Mailbox\Models\MailboxFolder;
 use Actengage\Mailbox\Models\MailboxMessage;
-use Actengage\Mailbox\Models\MailboxMessageAttachment;
+use Http\Promise\Promise;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 use Microsoft\Graph\Core\Tasks\PageIterator;
-use Microsoft\Graph\Generated\Models\Attachment;
-use Microsoft\Graph\Generated\Models\BodyType;
-use Microsoft\Graph\Generated\Models\EmailAddress as EmailAddressModel;
-use Microsoft\Graph\Generated\Models\FollowupFlag as FollowupFlagModel;
-use Microsoft\Graph\Generated\Models\FollowupFlagStatus as FollowupFlagStatusModel;
-use Microsoft\Graph\Generated\Models\Importance as ImportanceModel;
-use Microsoft\Graph\Generated\Models\ItemBody;
 use Microsoft\Graph\Generated\Models\Message;
-use Microsoft\Graph\Generated\Models\Recipient;
 use Microsoft\Graph\Generated\Users\Item\Messages\Item\CreateReply\CreateReplyPostRequestBody;
 use Microsoft\Graph\Generated\Users\Item\Messages\Item\MessageItemRequestBuilderGetQueryParameters;
 use Microsoft\Graph\Generated\Users\Item\Messages\Item\MessageItemRequestBuilderGetRequestConfiguration;
@@ -96,9 +85,9 @@ class MessageService
     /**
      * Create a draft reply from the given messages.
      *
-     * @return void
+     * @return Promise<MailboxMessage>
      */
-    public function createReply(MailboxMessage $message): MailboxMessage
+    public function createReply(MailboxMessage $message): Promise
     {        
         $draft = new Message();
         $draft->setSubject($message->subject);
@@ -107,24 +96,52 @@ class MessageService
         $request = new CreateReplyPostRequestBody();
         $request->setMessage($draft);
 
-        $response = $this->service->client()->users()
+        return $this->service->client()->users()
             ->byUserId($message->mailbox->email)
             ->messages()
             ->byMessageId($message->external_id)
             ->createReply()
             ->post($request)
-            ->wait();
-
-        return $this->save($message->mailbox, $response);
+            ->then(function(Message $model) use ($message) {
+                return $this->save($message->mailbox, $model);
+            });
     }
 
     /**
-     * Patch a draft from the given message.
+     * Patch the message.
+     *
+     * @param MailboxMessage $message
+     * @return Message
      */
-    public function patch(MailboxMessage $message): MailboxMessage
+    public function patch(MailboxMessage $message): Message
     {
+        $model = Models::makeMessageModel($message);
 
+        $response = $this->service->client()->users()
+            ->byUserId($message->mailbox->email)
+            ->messages()
+            ->byMessageId($message->external_id)
+            ->patch($model)
+            ->wait();
+
+        return $response;
     }
+
+    /**
+     * Send the message.
+     *
+     * @param MailboxMessage $message
+     * @return Promise<void>
+     */
+    public function send(MailboxMessage $message): Promise
+    {
+        return $this->service->client()->users()
+            ->byUserId($message->mailbox->email)
+            ->messages()
+            ->byMessageId($message->external_id)
+            ->send()
+            ->post();
+    } 
 
     /**
      * Save the message to the database.

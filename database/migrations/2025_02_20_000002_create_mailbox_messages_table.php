@@ -48,9 +48,9 @@ return new class extends Migration
             $table->index(['mailbox_id', 'received_at']);
             $table->index(['mailbox_id', 'conversation_id']);
 
-            if (Schema::getConnection()->getDriverName() !== 'sqlite') {
-                $table->fullText(['subject', 'body']);
-            }
+            // if (Schema::getConnection()->getDriverName() !== 'sqlite') {
+            //     $table->fullText(['from', 'subject', 'body_preview']);
+            // }
         });
     }
 

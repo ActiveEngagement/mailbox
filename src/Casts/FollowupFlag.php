@@ -24,9 +24,9 @@ class FollowupFlag implements CastsAttributes
     {
         return FollowupFlagData::from([
             'status' => $value ?? FollowupFlagStatus::NotFlagged,
-            'startDateTime' => Carbon::parse($attributes['started_at']),
-            'dueDateTime' => Carbon::parse($attributes['due_at']),
-            'completedDateTime' => Carbon::parse($attributes['completed_at']),
+            'startDateTime' => $attributes['started_at'] ? Carbon::parse($attributes['started_at']) : null,
+            'dueDateTime' => $attributes['due_at'] ? Carbon::parse($attributes['due_at']) : null,
+            'completedDateTime' => $attributes['completed_at'] ? Carbon::parse($attributes['completed_at']) : null,
         ]);
     }
  
