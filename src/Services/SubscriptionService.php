@@ -53,8 +53,6 @@ class SubscriptionService
                 }
 
                 return $this->createMailboxSubscription($mailbox, $subscription);
-            }, function(ODataError $e) {
-                dd($e->getError()->getMessage());
             });
     }
 
