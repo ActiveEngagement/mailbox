@@ -4,6 +4,7 @@ namespace Actengage\Mailbox\Services;
 
 use Actengage\Mailbox\Models\Mailbox;
 use Actengage\Mailbox\Models\MailboxFolder;
+use Http\Promise\Promise;
 use Illuminate\Support\Collection;
 use Microsoft\Graph\Core\Tasks\PageIterator;
 use Microsoft\Graph\Generated\Models\MailFolder;
@@ -28,10 +29,9 @@ class FolderService
      *
      * @param string $userId
      * @param string $folderId
-     * @return MailFolder
-     * @throws \Exception
+     * @return Promise<MailFolder>
      */
-    public function find(Mailbox|string $mailbox, string $folderId): MailFolder
+    public function find(Mailbox|string $mailbox, string $folderId): Promise
     {
         $config = new MailFolderItemRequestBuilderGetRequestConfiguration(
             queryParameters: new MailFolderItemRequestBuilderGetQueryParameters(
@@ -43,8 +43,7 @@ class FolderService
             ->byUserId($mailbox instanceof Mailbox ? $mailbox->email : $mailbox)
             ->mailFolders()
             ->byMailFolderId($folderId)
-            ->get($config)
-            ->wait();
+            ->get($config);
     }
 
     /**

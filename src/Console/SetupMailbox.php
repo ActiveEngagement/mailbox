@@ -7,6 +7,9 @@ use Actengage\Mailbox\Facades\Folders;
 use Actengage\Mailbox\Facades\Messages;
 use Actengage\Mailbox\Facades\Subscriptions;
 use Actengage\Mailbox\Models\Mailbox;
+use Actengage\Mailbox\Models\MailboxFolder;
+use Actengage\Mailbox\Models\MailboxMessage;
+use Actengage\Mailbox\Models\MailboxSubscription;
 use Illuminate\Console\Command;
 use Illuminate\Contracts\Console\PromptsForMissingInput;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -74,11 +77,13 @@ class SetupMailbox extends Command implements PromptsForMissingInput
      */
     protected function createMailbox(): Mailbox
     {
-        return Mailbox::firstOrCreate([
-            'email' => $this->argument('email')
-        ], [
-            'connection' => Client::connection()
-        ]);
+        return Mailbox::withoutBroadcasting(function() {
+            return Mailbox::firstOrCreate([
+                'email' => $this->argument('email')
+            ], [
+                'connection' => Client::connection()
+            ]);
+        });
     }
 
     /**
@@ -89,11 +94,13 @@ class SetupMailbox extends Command implements PromptsForMissingInput
      */
     protected function createMailboxFolders(Mailbox $mailbox): void
     {
-        $folders = Folders::all($this->argument('email'));
-
-        foreach($folders as $folder) {
-            Folders::save($mailbox, $folder);
-        }
+        MailboxFolder::withoutBroadcasting(function() use ($mailbox) {
+            $folders = Folders::all($this->argument('email'));
+    
+            foreach($folders as $folder) {
+                Folders::save($mailbox, $folder);
+            }
+        });
     }
 
     /**
@@ -104,11 +111,13 @@ class SetupMailbox extends Command implements PromptsForMissingInput
      */
     protected function createMailboxMessages(Mailbox $mailbox): void
     {
-        $messages = Messages::all($this->argument('email'));
+        MailboxMessage::withoutBroadcasting(function() use ($mailbox) {
+            $messages = Messages::all($this->argument('email'));
 
-        foreach($messages as $message) {
-            Messages::save($mailbox, $message);
-        }
+            foreach($messages as $message) {
+                Messages::save($mailbox, $message);
+            }
+        });
     }
 
     /**
@@ -119,9 +128,11 @@ class SetupMailbox extends Command implements PromptsForMissingInput
      */
     protected function createMailboxSubscriptions(Mailbox $mailbox): void
     {
-        $mailbox->subscriptions->each->delete();
+        MailboxSubscription::withoutBroadcasting(function() use ($mailbox) {
+            $mailbox->subscriptions->each->delete();
 
-        Subscriptions::subscribe($mailbox);
+            Subscriptions::subscribe($mailbox);
+        });
     }
 
     /**

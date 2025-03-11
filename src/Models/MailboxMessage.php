@@ -9,7 +9,6 @@ use Actengage\Mailbox\Casts\Importance;
 use Actengage\Mailbox\Casts\Recipient;
 use Actengage\Mailbox\Casts\Recipients;
 use Database\Factories\MailboxMessageFactory;
-use Illuminate\Broadcasting\Channel;
 use Illuminate\Database\Eloquent\BroadcastsEvents;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -176,6 +175,34 @@ class MailboxMessage extends Model
     {
         $query->whereIn('external_id', collect($message)->map(function(MailboxMessage|string $message) {
             return $message instanceof MailboxMessage ? $message->external_id : $message;
+        }));
+    }
+
+    /**
+     * Scope the query to the given converstation ids.
+     *
+     * @param Builder $query
+     * @param MailboxMessage|string ...$message
+     * @return void
+     */
+    public function scopeConversation(Builder $query, MailboxMessage|string ...$message): void
+    {
+        $query->whereIn('conversation_id', collect($message)->map(function(MailboxMessage|string $message) {
+            return $message instanceof MailboxMessage ? $message->conversation_id : $message;
+        }));
+    }
+
+    /**
+     * Scope the query to the given message ids.
+     *
+     * @param Builder $query
+     * @param MailboxMessage|string|int ...$message
+     * @return void
+     */
+    public function scopeMessage(Builder $query, MailboxMessage|string|int ...$message): void
+    {
+        $query->whereIn('id', collect($message)->map(function(MailboxMessage|string $message) {
+            return $message instanceof MailboxMessage ? $message->getKey() : $message;
         }));
     }
 

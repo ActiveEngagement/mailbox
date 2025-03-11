@@ -57,5 +57,6 @@ class MailboxFolderObserver
     {
         Cache::forget("mailbox.{$mailboxFolder->mailbox->id}.folders.drafts");
         Cache::forget("mailbox.{$mailboxFolder->mailbox->id}.folders.sentItems");
+        Cache::forget("mailbox.{$mailboxFolder->mailbox->id}.folders.deletedItems");
     }
 }

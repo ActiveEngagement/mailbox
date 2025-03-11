@@ -10,8 +10,14 @@ use Actengage\Mailbox\Models\MailboxMessage;
 use Http\Promise\Promise;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
+use Microsoft\Graph\BatchRequestBuilder;
+use Microsoft\Graph\Core\Requests\BatchRequestContent;
+use Microsoft\Graph\Core\Requests\BatchResponseContent;
+use Microsoft\Graph\Core\Requests\BatchResponseItem;
 use Microsoft\Graph\Core\Tasks\PageIterator;
+use Microsoft\Graph\Generated\Models\MailFolder;
 use Microsoft\Graph\Generated\Models\Message;
+use Microsoft\Graph\Generated\Models\ODataErrors\ODataError;
 use Microsoft\Graph\Generated\Users\Item\Messages\Item\CreateReply\CreateReplyPostRequestBody;
 use Microsoft\Graph\Generated\Users\Item\Messages\Item\MessageItemRequestBuilderGetQueryParameters;
 use Microsoft\Graph\Generated\Users\Item\Messages\Item\MessageItemRequestBuilderGetRequestConfiguration;
@@ -31,9 +37,9 @@ class MessageService
      *
      * @param string $userId
      * @param string $messageId
-     * @return Message
+     * @return Promise<Message>
      */
-    public function find(string $userId, string $messageId): Message
+    public function find(string $userId, string $messageId): Promise
     {
         return $this->service->client()->users()
             ->byUserId($userId)
@@ -43,8 +49,7 @@ class MessageService
                 queryParameters: new MessageItemRequestBuilderGetQueryParameters(
                     expand: ['attachments']
                 )
-            ))
-            ->wait();
+            ));
     }
 
     /**
@@ -83,7 +88,7 @@ class MessageService
     }
 
     /**
-     * Create a draft reply from the given messages.
+     * Create a draft reply using the Graph API.
      *
      * @return Promise<MailboxMessage>
      */
@@ -108,30 +113,62 @@ class MessageService
     }
 
     /**
-     * Patch the message.
+     * Patch the message using the Graph API.
      *
      * @param MailboxMessage $message
-     * @return Message
+     * @return Promise<Message|null>
      */
-    public function patch(MailboxMessage $message): Message
+    public function patch(MailboxMessage $message): Promise
     {
         $model = Models::makeMessageModel($message);
 
-        $response = $this->service->client()->users()
+        return $this->service->client()->users()
             ->byUserId($message->mailbox->email)
             ->messages()
             ->byMessageId($message->external_id)
-            ->patch($model)
-            ->wait();
+            ->patch($model);
+    }
 
-        return $response;
+    /**
+     * Delete the message using the Graph API.
+     *
+     * @param MailboxMessage ...$message
+     * @return \Illuminate\Support\Collection<int, ODataError>>
+     */
+    public function delete(MailboxMessage ...$message): Collection
+    {
+        $requests = collect($message)->chunk(20)->map(function(Collection $chunk) {
+            return new BatchRequestContent(collect($chunk)->map(function(MailboxMessage $message) {
+                return $this->service->client()->users()
+                    ->byUserId($message->mailbox->email)
+                    ->messages()
+                    ->byMessageId($message->external_id)
+                    ->toDeleteRequestInformation();
+            })->all());
+        });
+
+        $requestBuilder = new BatchRequestBuilder(
+            $this->service->client()->getRequestAdapter()
+        );
+
+        return $requests->map(function(BatchRequestContent $content) use ($requestBuilder) {
+            return $requestBuilder->postAsync($content)->then(function (BatchResponseContent $response) {
+                return collect($response->getResponses())->map(function (BatchResponseItem $item) use ($response) {
+                    if($item->getBody() === null) {
+                        return;
+                    }
+
+                    return $response->getResponseBody($item->getId(), ODataError::class);
+                })->filter();
+            })->wait();
+        })->flatten();
     }
 
     /**
      * Send the message.
      *
      * @param MailboxMessage $message
-     * @return Promise<void>
+     * @return Promise<void|null>
      */
     public function send(MailboxMessage $message): Promise
     {
@@ -179,9 +216,10 @@ class MessageService
             $model->folder()->associate($folder);
         }
         else {
-            $folder = Folders::find($mailbox, $message->getParentFolderId());
-
-            $model->folder()->associate(Folders::save($mailbox, $folder));
+            Folders::find($mailbox, $message->getParentFolderId())
+                ->then(function(MailFolder $folder) use ($model, $mailbox) {
+                    $model->folder()->associate(Folders::save($mailbox, $folder));
+                });
         }
 
         $model->save();

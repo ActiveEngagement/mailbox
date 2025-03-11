@@ -62,3 +62,41 @@ it('it scopes the query by external id', function() {
     expect($mailbox->messages()->externalId(...$inbox->messages)->get())->toHaveCount(3);
     expect($mailbox->messages()->externalId(...$drafts->pluck('id'))->get())->toHaveCount(3);
 });
+
+it('it scopes the query by conversation id', function() {
+    $mailbox = Mailbox::factory()->create();
+
+    $folder = MailboxFolder::factory([
+        'mailbox_id' => $mailbox->id
+    ])->has(MailboxMessage::factory()->state([
+        'mailbox_id' => $mailbox->id,
+        'conversation_id' => 'test'
+    ])->count(3), 'messages');
+
+    $folder->create([
+        'name' => 'Inbox'
+    ]);
+
+    expect($mailbox->messages)->toHaveCount(3);
+    expect($mailbox->messages()->conversation('test')->get())->toHaveCount(3);   
+    expect($mailbox->messages()->conversation($mailbox->messages->first())->get())->toHaveCount(3);    
+});
+
+it('it scopes the query by message id', function() {
+    $mailbox = Mailbox::factory()->create();
+
+    $folder = MailboxFolder::factory([
+        'mailbox_id' => $mailbox->id
+    ])->has(MailboxMessage::factory()->state([
+        'mailbox_id' => $mailbox->id,
+        'conversation_id' => 'test'
+    ])->count(3), 'messages');
+
+    $folder->create([
+        'name' => 'Inbox'
+    ]);
+
+    expect($mailbox->messages)->toHaveCount(3);
+    expect($mailbox->messages()->message($mailbox->messages()->first())->get())->toHaveCount(1);   
+    expect($mailbox->messages()->message(1)->get())->toHaveCount(1);    
+});

@@ -108,6 +108,18 @@ class Mailbox extends Model
     }
 
     /**
+     * Get the Deleted Items folder.
+     *
+     * @return MailboxFolder|null
+     */
+    public function deletedItemsFolder(): ?MailboxFolder
+    {
+        return Cache::rememberForever("mailbox.{$this->id}.folders.deletedItems", function() {
+            return $this->folders()->whereName('Deleted Items')->first();
+        });
+    }
+
+    /**
      * Get the Sent Items folder.
      *
      * @return MailboxFolder|null

@@ -2,6 +2,7 @@
 
 namespace Actengage\Mailbox;
 
+use Actengage\Mailbox\Console\CreateSubscriptions;
 use Actengage\Mailbox\Console\DestroyMailbox;
 use Actengage\Mailbox\Console\ResubscribeToSubscriptions;
 use Actengage\Mailbox\Console\SetupMailbox;
@@ -58,6 +59,7 @@ class ServiceProvider extends BaseServiceProvider
             $this->commands([
                 SetupMailbox::class,
                 DestroyMailbox::class,
+                CreateSubscriptions::class,
                 ResubscribeToSubscriptions::class
             ]);
         }

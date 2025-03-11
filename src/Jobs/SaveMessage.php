@@ -7,6 +7,7 @@ use Actengage\Mailbox\Facades\Messages;
 use Actengage\Mailbox\Models\Mailbox;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
+use Microsoft\Graph\Generated\Models\Message;
 
 class SaveMessage implements ShouldQueue
 {
@@ -29,8 +30,9 @@ class SaveMessage implements ShouldQueue
     {
         Client::connect($this->mailbox->connection);
 
-        $message = Messages::find($this->mailbox->email, $this->id);
-
-        Messages::save($this->mailbox, $message);
+        Messages::find($this->mailbox->email, $this->id)->then(function(Message $message) {
+            Messages::save($this->mailbox, $message);
+        });
+;
     }
 }

@@ -41,12 +41,13 @@ return new class extends Migration
             $table->timestamp('sent_at')->nullable();
             $table->timestamps();
 
+            $table->index(['mailbox_id', 'external_id']);
+            $table->index(['mailbox_id', 'conversation_id']);
             $table->index(['mailbox_id', 'folder_id']);
             $table->index(['mailbox_id', 'folder_id', 'from']);
             $table->index(['mailbox_id', 'folder_id', 'received_at']);
             $table->index(['mailbox_id', 'folder_id', 'conversation_id']);
-            $table->index(['mailbox_id', 'received_at']);
-            $table->index(['mailbox_id', 'conversation_id']);
+            $table->index(['mailbox_id', 'folder_id', 'external_id']);
 
             // if (Schema::getConnection()->getDriverName() !== 'sqlite') {
             //     $table->fullText(['from', 'subject', 'body_preview']);
