@@ -2,6 +2,7 @@
 
 namespace Actengage\Mailbox\Jobs;
 
+use Actengage\Mailbox\Facades\Attachments;
 use Actengage\Mailbox\Facades\Client;
 use Actengage\Mailbox\Facades\Messages;
 use Actengage\Mailbox\Models\Mailbox;
@@ -31,8 +32,9 @@ class SaveMessage implements ShouldQueue
         Client::connect($this->mailbox->connection);
 
         Messages::find($this->mailbox->email, $this->id)->then(function(Message $message) {
-            Messages::save($this->mailbox, $message);
+            $model = Messages::save($this->mailbox, $message);
+
+            Attachments::processUrlsAsAttachments($model);
         });
-;
     }
 }

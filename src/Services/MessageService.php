@@ -2,6 +2,7 @@
 
 namespace Actengage\Mailbox\Services;
 
+use Actengage\Mailbox\Facades\Attachments;
 use Actengage\Mailbox\Facades\Folders;
 use Actengage\Mailbox\Facades\Models;
 use Actengage\Mailbox\Models\Mailbox;
@@ -18,7 +19,9 @@ use Microsoft\Graph\Core\Tasks\PageIterator;
 use Microsoft\Graph\Generated\Models\MailFolder;
 use Microsoft\Graph\Generated\Models\Message;
 use Microsoft\Graph\Generated\Models\ODataErrors\ODataError;
+use Microsoft\Graph\Generated\Users\Item\Messages\Item\CreateForward\CreateForwardPostRequestBody;
 use Microsoft\Graph\Generated\Users\Item\Messages\Item\CreateReply\CreateReplyPostRequestBody;
+use Microsoft\Graph\Generated\Users\Item\Messages\Item\CreateReplyAll\CreateReplyAllPostRequestBody;
 use Microsoft\Graph\Generated\Users\Item\Messages\Item\MessageItemRequestBuilderGetQueryParameters;
 use Microsoft\Graph\Generated\Users\Item\Messages\Item\MessageItemRequestBuilderGetRequestConfiguration;
 use Microsoft\Graph\Generated\Users\Item\Messages\MessagesRequestBuilderGetRequestConfiguration;
@@ -92,6 +95,25 @@ class MessageService
      *
      * @return Promise<MailboxMessage>
      */
+    public function create(Mailbox $mailbox): Promise
+    {        
+        $draft = new Message();
+        $draft->setIsDraft(true);
+
+        return $this->service->client()->users()
+            ->byUserId($mailbox->email)
+            ->messages()
+            ->post($draft)
+            ->then(function(Message $model) use ($mailbox) {
+                return $this->save($mailbox, $model);
+            });
+    }
+    
+    /**
+     * Create a draft reply using the Graph API.
+     *
+     * @return Promise<MailboxMessage>
+     */
     public function createReply(MailboxMessage $message): Promise
     {        
         $draft = new Message();
@@ -106,6 +128,55 @@ class MessageService
             ->messages()
             ->byMessageId($message->external_id)
             ->createReply()
+            ->post($request)
+            ->then(function(Message $model) use ($message) {
+                return $this->save($message->mailbox, $model);
+            });
+    }
+    
+    /**
+     * Create a draft reply all using the Graph API.
+     *
+     * @return Promise<MailboxMessage>
+     */
+    public function createReplyAll(MailboxMessage $message): Promise
+    {        
+        $draft = new Message();
+        $draft->setSubject($message->subject);
+        $draft->setIsDraft(true);
+
+        $request = new CreateReplyAllPostRequestBody();
+        $request->setMessage($draft);
+
+        return $this->service->client()->users()
+            ->byUserId($message->mailbox->email)
+            ->messages()
+            ->byMessageId($message->external_id)
+            ->createReplyAll()
+            ->post($request)
+            ->then(function(Message $model) use ($message) {
+                return $this->save($message->mailbox, $model);
+            });
+    }
+    /**
+     * Create a draft forward using the Graph API.
+     *
+     * @return Promise<MailboxMessage>
+     */
+    public function createForward(MailboxMessage $message): Promise
+    {        
+        $draft = new Message();
+        $draft->setSubject($message->subject);
+        $draft->setIsDraft(true);
+
+        $request = new CreateForwardPostRequestBody();
+        $request->setMessage($draft);
+
+        return $this->service->client()->users()
+            ->byUserId($message->mailbox->email)
+            ->messages()
+            ->byMessageId($message->external_id)
+            ->createForward()
             ->post($request)
             ->then(function(Message $model) use ($message) {
                 return $this->save($message->mailbox, $model);
@@ -212,7 +283,7 @@ class MessageService
             'sent_at' => $message->getSentDateTime(),
         ]);
 
-        if($folder = MailboxFolder::folder($message->getParentFolderId())->first()) {
+        if($folder = MailboxFolder::externalId($message->getParentFolderId())->first()) {
             $model->folder()->associate($folder);
         }
         else {
@@ -226,31 +297,7 @@ class MessageService
 
         if($message->getHasAttachments()) {
             foreach(collect($message->getAttachments()) as $attachment) {
-                $disk = $this->service->config('storage_disk', 'local');
-
-                $contents = base64_decode($attachment->getBackingStore()->get('contentBytes'));
-
-                $path = $model->attachmentRelativePath($attachment->getName());
-
-                Storage::disk($disk)->put($path, $contents, [
-                    'visibility' => 'public'
-                ]);
-
-                $attachmentModel = $model->attachments()->firstOrNew([
-                    'path' => $path
-                ]);
-
-                $attachmentModel->fill([
-                    'disk' => $disk,
-                    'path' => $path,
-                    'name' => $attachment->getName(),
-                    'size' => $attachment->getSize(),
-                    'content_type' => $attachment->getContentType(),
-                    'last_modified_at' => $attachment->getLastModifiedDateTime()
-                ]);
-
-                $attachmentModel->mailbox()->associate($mailbox);
-                $attachmentModel->save();
+                Attachments::createFromAttachment($model, $attachment);
             }
         }
 

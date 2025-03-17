@@ -4,6 +4,7 @@ namespace Actengage\Mailbox\Models;
 
 use Database\Factories\MailboxMessageAttachmentFactory;
 use Illuminate\Database\Eloquent\BroadcastsEvents;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -86,6 +87,18 @@ class MailboxMessageAttachment extends Model
     public function message(): BelongsTo
     {
         return $this->belongsTo(MailboxMessage::class);
+    }
+
+    /**
+     * Scope the query by the given name.
+     *
+     * @param Builder $query
+     * @param string ...$name
+     * @return void
+     */
+    public function scopeName(Builder $query, string ...$name)
+    {
+        $query->whereIn('name', $name);
     }
 
     /**

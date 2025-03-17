@@ -6,6 +6,7 @@ use Actengage\Mailbox\Console\CreateSubscriptions;
 use Actengage\Mailbox\Console\DestroyMailbox;
 use Actengage\Mailbox\Console\ResubscribeToSubscriptions;
 use Actengage\Mailbox\Console\SetupMailbox;
+use Actengage\Mailbox\Services\AttachmentService;
 use Actengage\Mailbox\Services\ClientService;
 use Actengage\Mailbox\Services\FolderService;
 use Actengage\Mailbox\Services\MessageService;
@@ -32,6 +33,7 @@ class ServiceProvider extends BaseServiceProvider
         $this->loadRoutesFrom(__DIR__.'/../routes/webhooks.php');
 
         $this->registerClientService();
+        $this->registerAttachmentService();
         $this->registerFolderService();
         $this->registerMessageService();
         $this->registerModelService();
@@ -77,6 +79,20 @@ class ServiceProvider extends BaseServiceProvider
         });
 
         $this->app->alias(ClientService::class, 'mailbox.graph.client');
+    }
+
+    /**
+     * Register the Attachment service.
+     *
+     * @return void
+     */
+    protected function registerAttachmentService(): void
+    {
+        $this->app->singleton(AttachmentService::class, function() {
+            return new AttachmentService(app(ClientService::class));
+        });
+
+        $this->app->alias(AttachmentService::class, 'mailbox.attachments');
     }
 
     /**

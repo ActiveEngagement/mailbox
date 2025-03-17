@@ -30,6 +30,21 @@ class ModelService
      */
     public function makeMessageModel(MailboxMessage $message): Message
     {
+        if($message->is_draft) {
+            return $this->makeDraftMessageModel($message);
+        }
+        
+        $model = new Message();
+        $model->setId($message->external_id);
+        $model->setFlag($this->makeFollowupFlagModel($message->flag));
+        $model->setImportance($this->makeImportanceModel($message->importance));
+        $model->setIsRead($message->is_read);
+
+        return $model;
+    }
+
+    public function makeDraftMessageModel(MailboxMessage $message): Message
+    {
         $type = new BodyType('HTML');
 
         $body = new ItemBody();
@@ -37,12 +52,14 @@ class ModelService
         $body->setContentType($type);
 
         $model = new Message();
+        $model->setId($message->external_id);
         $model->setFrom($this->makeRecipientModel($message->from));
         $model->setSubject($message->subject);
         $model->setBody($body);
         $model->setFlag($this->makeFollowupFlagModel($message->flag));
         $model->setImportance($this->makeImportanceModel($message->importance));
         $model->setIsDraft($message->is_draft);
+        $model->setIsRead($message->is_read);
         
         if($message->to) {
             $model->setToRecipients(collect($message->to)->map(function(EmailAddress $value) {

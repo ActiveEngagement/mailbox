@@ -32,7 +32,7 @@ use Spatie\TypeScriptTransformer\Attributes\TypeScript;
     'is_draft' => 'boolean',
     'flag' => 'FollowupFlag',
     'importance' => 'Importance',
-    'from' => 'EmailAddress',
+    'from?' => 'EmailAddress',
     'to' => 'EmailAddress[]',
     'cc' => 'EmailAddress[]',
     'bcc' => 'EmailAddress[]',

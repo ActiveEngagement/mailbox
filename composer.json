@@ -12,13 +12,14 @@
         "test": "phpunit"
     },
     "require": {
-        "php": "^8.2",
+        "php": "^8.4",
         "laravel/framework": "^11.0",
         "microsoft/microsoft-graph": "^2.26",
         "php-http/promise": "^1.2",
         "spatie/laravel-data": "^4.13",
         "spatie/laravel-typescript-transformer": "^2.5",
-        "laravel/scout": "^10.13"
+        "laravel/scout": "^10.13",
+        "cardinalby/content-disposition": "^1.1"
     },
     "require-dev": {
         "orchestra/testbench": "^9.5",
