@@ -15,7 +15,7 @@ class FinishedProcessingUrlsAsAttachments implements ShouldQueue
      * Create a new job instance.
      */
     public function __construct(
-        public MailboxMessage $message
+        public MailboxMessage $model
     ) {
         //
     }
@@ -26,6 +26,6 @@ class FinishedProcessingUrlsAsAttachments implements ShouldQueue
      */
     public function handle(): void
     {
-        event(new ProcessedUrlsAsAttachments($this->message));
+        event(new ProcessedUrlsAsAttachments($this->model));
     }
 }
