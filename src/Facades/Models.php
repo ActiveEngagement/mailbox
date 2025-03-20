@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Facade;
 /**
  * @see \Actengage\Mailbox\Services\ModelService
  * @method static \Microsoft\Graph\Generated\Models\Message makeMessageModel(\Actengage\Mailbox\Models\MailboxMessage $message)
+ * @method static \Microsoft\Graph\Generated\Models\Message makeDraftMessageModel(\Actengage\Mailbox\Models\MailboxMessage $message)
  * @method static \Microsoft\Graph\Generated\Models\Recipient makeRecipientModel(\Actengage\Mailbox\Data\EmailAddress $email)
  * @method static \Microsoft\Graph\Generated\Models\EmailAddress makeEmailAddressModel(\Actengage\Mailbox\Data\EmailAddress $email)
  * @method static \Microsoft\Graph\Generated\Models\Attachment makeAttachmentModel(\Actengage\Mailbox\Models\MailboxMessageAttachment $attachment)

@@ -14,10 +14,11 @@ it('makes a Graph API Message model from a MailboxMessage model', function() {
     $message = MailboxMessage::factory()
         ->has($attachment, 'attachments')
         ->create([
+            'from' => 'test@test.com',
             'reply_to' => ['test@test.com']
         ]);
 
-    $model = Models::makeMessageModel($message);
+    $model = Models::makeDraftMessageModel($message);
     
     expect($model->getFrom()->getEmailAddress()->getAddress())->toBe($message->from->email);
     expect($model->getToRecipients())->toHaveCount($message->to->count());

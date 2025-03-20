@@ -11,6 +11,9 @@
 |
 */
 
+use Microsoft\Graph\Generated\Models\EmailAddress;
+use Microsoft\Graph\Generated\Models\Recipient;
+
 pest()->extend(Tests\TestCase::class)
     ->use(Illuminate\Foundation\Testing\RefreshDatabase::class)
     ->in(__DIR__);
@@ -41,7 +44,13 @@ expect()->extend('toBeOne', function () {
 |
 */
 
-function something()
-{
-    // ..
+function createRecipient(): Recipient {
+    $email = new EmailAddress();
+    $email->setAddress('test@test.com');
+    $email->setName('Test Test');
+
+    $recipient = new Recipient();
+    $recipient->setEmailAddress($email);
+
+    return $recipient;
 }

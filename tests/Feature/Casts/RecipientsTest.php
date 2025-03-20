@@ -6,17 +6,6 @@ use Illuminate\Support\Collection;
 use Microsoft\Graph\Generated\Models\EmailAddress as ModelsEmailAddress;
 use Microsoft\Graph\Generated\Models\Recipient;
 
-function createRecipient(): Recipient {
-    $email = new ModelsEmailAddress();
-    $email->setAddress('test@test.com');
-    $email->setName('Test Test');
-
-    $recipient = new Recipient();
-    $recipient->setEmailAddress($email);
-
-    return $recipient;
-}
-
 it('casts from accepted types correctly', function() {
     $message = MailboxMessage::factory()->make();
     

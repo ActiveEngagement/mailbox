@@ -2,6 +2,7 @@
 
 namespace Actengage\Mailbox\Jobs;
 
+use Actengage\Mailbox\Events\ProcessedUrlsAsAttachments;
 use Actengage\Mailbox\Facades\Attachments;
 use Actengage\Mailbox\Models\MailboxMessage;
 use Illuminate\Contracts\Queue\ShouldQueue;

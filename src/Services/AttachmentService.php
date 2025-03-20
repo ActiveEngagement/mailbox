@@ -2,12 +2,15 @@
 
 namespace Actengage\Mailbox\Services;
 
+use Actengage\Mailbox\Events\ProcessedUrlsAsAttachments;
+use Actengage\Mailbox\Jobs\FinishedProcessingUrlsAsAttachments;
 use Actengage\Mailbox\Jobs\ProcessUrlAsAttachment;
 use Actengage\Mailbox\Models\MailboxMessage;
 use Actengage\Mailbox\Models\MailboxMessageAttachment;
 use cardinalby\ContentDisposition\ContentDisposition;
 use Dom\HTMLDocument;
 use Illuminate\Http\Client\Response;
+use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Microsoft\Graph\Generated\Models\Attachment;
@@ -60,9 +63,13 @@ class AttachmentService
      */
     public function processUrlsAsAttachments(MailboxMessage $message)
     {
-        foreach($this->extractUrls($message) as $url) {
-            dispatch(new ProcessUrlAsAttachment($message, $url));
-        }
+        $jobs = collect($this->extractUrls($message))->map(
+            fn (string $url) => new ProcessUrlAsAttachment($message, $url)
+        );
+
+        $jobs->push(new FinishedProcessingUrlsAsAttachments($message));
+
+        Bus::chain($jobs);
     }
 
     /**

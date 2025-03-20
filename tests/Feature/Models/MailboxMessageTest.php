@@ -57,10 +57,10 @@ it('it scopes the query by external id', function() {
     $drafts = $folder->create([
         'name' => 'Drafts'
     ]);
-
+    
     expect($mailbox->messages)->toHaveCount(6);
     expect($mailbox->messages()->externalId(...$inbox->messages)->get())->toHaveCount(3);
-    expect($mailbox->messages()->externalId(...$drafts->pluck('id'))->get())->toHaveCount(3);
+    expect($mailbox->messages()->externalId(...$drafts->messages->pluck('external_id'))->get())->toHaveCount(3);
 });
 
 it('it scopes the query by conversation id', function() {
