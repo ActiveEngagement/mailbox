@@ -8,6 +8,9 @@ use Actengage\Mailbox\Casts\FollowupFlag;
 use Actengage\Mailbox\Casts\Importance;
 use Actengage\Mailbox\Casts\Recipient;
 use Actengage\Mailbox\Casts\Recipients;
+use Actengage\Mailbox\Events\MailboxMessageCreated;
+use Actengage\Mailbox\Events\MailboxMessageDeleted;
+use Actengage\Mailbox\Events\MailboxMessageUpdated;
 use Database\Factories\MailboxMessageFactory;
 use Illuminate\Database\Eloquent\BroadcastsEvents;
 use Illuminate\Database\Eloquent\Builder;
@@ -77,6 +80,19 @@ class MailboxMessage extends Model
         'body_preview',
         'received_at',
         'sent_at',
+    ];
+
+    /**
+     * The event map for the model.
+     *
+     * Allows for object-based events for native Eloquent events.
+     *
+     * @var array<string,class-string>
+     */
+    protected $dispatchesEvents = [
+        'created' => MailboxMessageCreated::class,
+        'updated' => MailboxMessageUpdated::class,
+        'deleted' => MailboxMessageDeleted::class,
     ];
 
     /**

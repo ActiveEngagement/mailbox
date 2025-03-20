@@ -2,6 +2,9 @@
 
 namespace Actengage\Mailbox\Models;
 
+use Actengage\Mailbox\Events\MailboxCreated;
+use Actengage\Mailbox\Events\MailboxDeleted;
+use Actengage\Mailbox\Events\MailboxUpdated;
 use Database\Factories\MailboxFactory;
 use Illuminate\Database\Eloquent\BroadcastsEvents;
 use Illuminate\Database\Eloquent\Builder;
@@ -35,6 +38,19 @@ class Mailbox extends Model
     protected $fillable = [
         'email',
         'connection'
+    ];
+
+    /**
+     * The event map for the model.
+     *
+     * Allows for object-based events for native Eloquent events.
+     *
+     * @var array<string,class-string>
+     */
+    protected $dispatchesEvents = [
+        'created' => MailboxCreated::class,
+        'updated' => MailboxUpdated::class,
+        'deleted' => MailboxDeleted::class,
     ];
 
     /**

@@ -2,6 +2,9 @@
 
 namespace Actengage\Mailbox\Models;
 
+use Actengage\Mailbox\Events\MailboxSubscriptionCreated;
+use Actengage\Mailbox\Events\MailboxSubscriptionDeleted;
+use Actengage\Mailbox\Events\MailboxSubscriptionUpdated;
 use Actengage\Mailbox\Observers\MailboxSubscriptionObserver;
 use DateTime;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
@@ -40,6 +43,20 @@ class MailboxSubscription extends Model
         'change_type',
         'notification_url',
         'expires_at'
+    ];
+
+
+    /**
+     * The event map for the model.
+     *
+     * Allows for object-based events for native Eloquent events.
+     *
+     * @var array<string,class-string>
+     */
+    protected $dispatchesEvents = [
+        'created' => MailboxSubscriptionCreated::class,
+        'updated' => MailboxSubscriptionUpdated::class,
+        'deleted' => MailboxSubscriptionDeleted::class,
     ];
 
     /**

@@ -2,6 +2,9 @@
 
 namespace Actengage\Mailbox\Models;
 
+use Actengage\Mailbox\Events\MailboxMessageAttachmentCreated;
+use Actengage\Mailbox\Events\MailboxMessageAttachmentDeleted;
+use Actengage\Mailbox\Events\MailboxMessageAttachmentUpdated;
 use Database\Factories\MailboxMessageAttachmentFactory;
 use Illuminate\Database\Eloquent\BroadcastsEvents;
 use Illuminate\Database\Eloquent\Builder;
@@ -55,6 +58,19 @@ class MailboxMessageAttachment extends Model
      */
     protected $appends = [
         'url'
+    ];
+
+    /**
+     * The event map for the model.
+     *
+     * Allows for object-based events for native Eloquent events.
+     *
+     * @var array<string,class-string>
+     */
+    protected $dispatchesEvents = [
+        'created' => MailboxMessageAttachmentCreated::class,
+        'updated' => MailboxMessageAttachmentUpdated::class,
+        'deleted' => MailboxMessageAttachmentDeleted::class,
     ];
 
     /**

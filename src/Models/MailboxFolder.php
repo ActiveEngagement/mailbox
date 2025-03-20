@@ -2,6 +2,9 @@
 
 namespace Actengage\Mailbox\Models;
 
+use Actengage\Mailbox\Events\MailboxFolderCreated;
+use Actengage\Mailbox\Events\MailboxFolderDeleted;
+use Actengage\Mailbox\Events\MailboxFolderUpdated;
 use Actengage\Mailbox\Observers\MailboxFolderObserver;
 use Database\Factories\MailboxFolderFactory;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
@@ -44,6 +47,19 @@ class MailboxFolder extends Model
         'name',
         'is_hidden',
         'is_favorite'
+    ];
+
+    /**
+     * The event map for the model.
+     *
+     * Allows for object-based events for native Eloquent events.
+     *
+     * @var array<string,class-string>
+     */
+    protected $dispatchesEvents = [
+        'created' => MailboxFolderCreated::class,
+        'updated' => MailboxFolderUpdated::class,
+        'deleted' => MailboxFolderDeleted::class,
     ];
 
     /**
