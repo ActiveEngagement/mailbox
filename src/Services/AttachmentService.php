@@ -2,7 +2,6 @@
 
 namespace Actengage\Mailbox\Services;
 
-use Actengage\Mailbox\Events\ProcessedUrlsAsAttachments;
 use Actengage\Mailbox\Jobs\FinishedProcessingUrlsAsAttachments;
 use Actengage\Mailbox\Jobs\ProcessUrlAsAttachment;
 use Actengage\Mailbox\Models\MailboxMessage;
@@ -46,8 +45,15 @@ class AttachmentService
 
         $urls = [];
 
+        
         foreach($document->querySelectorAll('a') as $node) {
-            if($href = $node->getAttribute('href')) {
+            if(!$href = $node->getAttribute('href')) {
+                continue;
+            }
+
+            $scheme = parse_url($href, PHP_URL_SCHEME);
+
+            if($href && in_array($scheme, ['http', 'https'])) {
                 $urls[] = $href;
             }            
         }
@@ -61,7 +67,7 @@ class AttachmentService
      * @param MailboxMessage $message
      * @return void
      */
-    public function processUrlsAsAttachments(MailboxMessage $message)
+    public function processUrlsAsAttachments(MailboxMessage $message): void
     {
         $jobs = collect($this->extractUrls($message))->map(
             fn (string $url) => new ProcessUrlAsAttachment($message, $url)
@@ -69,7 +75,9 @@ class AttachmentService
 
         $jobs->push(new FinishedProcessingUrlsAsAttachments($message));
 
-        Bus::chain($jobs);
+        Bus::chain($jobs)->catch(function() use ($message) {
+            dispatch(new FinishedProcessingUrlsAsAttachments($message));
+        })->dispatch();
     }
 
     /**
