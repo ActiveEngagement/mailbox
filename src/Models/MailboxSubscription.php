@@ -23,6 +23,7 @@ use Spatie\TypeScriptTransformer\Attributes\TypeScript;
     'resource' => 'string',
     'change_type' => 'string',
     'notification_url' => 'string',
+    'expires_at' => 'string',
     'created_at' => 'string',
     'updated_at' => 'string',
     'mailbox?' => 'Mailbox',
@@ -67,7 +68,7 @@ class MailboxSubscription extends Model
     public function casts(): array
     {
         return [
-            'expires_at' => 'timestamp',
+            'expires_at' => 'datetime',
         ];
     }
 
