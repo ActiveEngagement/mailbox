@@ -10,7 +10,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Microsoft\Graph\Generated\Models\Message;
 
-class SaveMessage implements ShouldQueue
+class CreateMessage implements ShouldQueue
 {
     use Queueable;
 
