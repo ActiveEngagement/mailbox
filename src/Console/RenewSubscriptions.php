@@ -10,7 +10,7 @@ use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Input\InputOption;
 
 #[AsCommand(name: 'mailbox:resubscribe')]
-class ResubscribeToSubscriptions extends Command
+class RenewSubscriptions extends Command
 {
     /**
      * The name and signature of the console command.

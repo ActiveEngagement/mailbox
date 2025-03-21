@@ -4,7 +4,7 @@ namespace Actengage\Mailbox;
 
 use Actengage\Mailbox\Console\CreateSubscriptions;
 use Actengage\Mailbox\Console\DestroyMailbox;
-use Actengage\Mailbox\Console\ResubscribeToSubscriptions;
+use Actengage\Mailbox\Console\RenewSubscriptions;
 use Actengage\Mailbox\Console\SetupMailbox;
 use Actengage\Mailbox\Services\AttachmentService;
 use Actengage\Mailbox\Services\ClientService;
@@ -62,7 +62,7 @@ class ServiceProvider extends BaseServiceProvider
                 SetupMailbox::class,
                 DestroyMailbox::class,
                 CreateSubscriptions::class,
-                ResubscribeToSubscriptions::class
+                RenewSubscriptions::class
             ]);
         }
     }
