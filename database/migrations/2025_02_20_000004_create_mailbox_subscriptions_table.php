@@ -16,11 +16,13 @@ return new class extends Migration
             $table->integer('mailbox_id')->unsigned();
             $table->foreign('mailbox_id')->references('id')->on('mailboxes')->cascadeOnDelete()->cascadeOnUpdate();
             $table->string('external_id')->unique();
-            $table->string('resource')->unique();
+            $table->string('resource');
             $table->string('change_type');
             $table->string('notification_url');
             $table->timestamp('expires_at');
             $table->timestamps();
+
+            $table->index(['mailbox_id', 'external_id']);
         });
     }
 
