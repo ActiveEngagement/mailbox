@@ -115,7 +115,7 @@ class AttachmentService
         $path = $message->attachmentRelativePath($disposition->getFilename());
 
         Storage::disk($disk)->put($path, $response->toPsrResponse()->getBody(), [
-            'visibility' => 'public'
+            'visibility' => $this->client->config('storage_visibility', 'private')
         ]);
 
         $model = $message->attachments()->make([
@@ -151,7 +151,7 @@ class AttachmentService
         $path = $message->attachmentRelativePath($attachment->getName());
 
         Storage::disk($disk)->put($path, $contents, [
-            'visibility' => 'public'
+            'visibility' => $this->client->config('storage_visibility', 'private')
         ]);
 
         $model = $message->attachments()->make([

@@ -33,7 +33,8 @@ return [
             'client_secret' => env('MAILBOX_CLIENT_SECRET'),
             'scopes' => explode(',', env('MAILBOX_SCOPES', 'https://graph.microsoft.com/.default')),
             'webhook_host' => env('MAILBOX_WEBHOOK_HOST', config('app.url')),
-            'storage_disk' => env('MAILBOX_STORAGE_DISK', 'public')
+            'storage_disk' => env('MAILBOX_STORAGE_DISK', 'public'),
+            'visibility' => env('MAILBOX_STORAGE_VISIBILITY', 'private')
         ]
     ]
 ];
