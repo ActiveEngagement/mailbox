@@ -43,6 +43,7 @@ use Spatie\TypeScriptTransformer\Attributes\TypeScript;
     'subject' => 'string',
     'body' => 'string',
     'body_preview?' => 'string',
+    'body_message?' => 'string',
     'received_at' => 'string',
     'sent_at?' => 'string',
     'created_at' => 'string',
@@ -78,6 +79,7 @@ class MailboxMessage extends Model
         'subject',
         'body',
         'body_preview',
+        'body_message',
         'received_at',
         'sent_at',
     ];
