@@ -112,6 +112,18 @@ class Mailbox extends Model
     }
 
     /**
+     * Get the Archive folder.
+     *
+     * @return MailboxFolder|null
+     */
+    public function archiveFolder(): ?MailboxFolder
+    {
+        return Cache::rememberForever("mailbox.{$this->id}.folders.archive", function() {
+            return $this->folders()->whereName('Archive')->first();
+        });
+    }
+
+    /**
      * Get the Drafts folder.
      *
      * @return MailboxFolder|null

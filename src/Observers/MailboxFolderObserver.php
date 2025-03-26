@@ -55,6 +55,7 @@ class MailboxFolderObserver
      */
     protected function bustCache(MailboxFolder $mailboxFolder): void
     {
+        Cache::forget("mailbox.{$mailboxFolder->mailbox->id}.folders.archive");
         Cache::forget("mailbox.{$mailboxFolder->mailbox->id}.folders.drafts");
         Cache::forget("mailbox.{$mailboxFolder->mailbox->id}.folders.sentItems");
         Cache::forget("mailbox.{$mailboxFolder->mailbox->id}.folders.deletedItems");

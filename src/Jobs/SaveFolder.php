@@ -7,6 +7,8 @@ use Actengage\Mailbox\Facades\Folders;
 use Actengage\Mailbox\Models\Mailbox;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
+use Microsoft\Graph\Generated\Models\MailFolder;
+use Microsoft\Graph\Generated\Models\ODataErrors\ODataError;
 
 class SaveFolder implements ShouldQueue
 {
@@ -29,8 +31,10 @@ class SaveFolder implements ShouldQueue
     {
         Client::connect($this->mailbox->connection);
 
-        $folder = Folders::find($this->mailbox->email, $this->id);
-
-        Folders::save($this->mailbox, $folder);
+        Folders::find($this->mailbox->email, $this->id)->then(function(MailFolder $folder) {
+            Folders::save($this->mailbox, $folder);
+        }, function(ODataError $e) {
+            throw $e;
+        });
     }
 }
