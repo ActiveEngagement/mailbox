@@ -11,8 +11,8 @@ use Actengage\Mailbox\Casts\Recipients;
 use Actengage\Mailbox\Events\MailboxMessageCreated;
 use Actengage\Mailbox\Events\MailboxMessageDeleted;
 use Actengage\Mailbox\Events\MailboxMessageUpdated;
+use Actengage\Mailbox\Support\BroadcastsEventsToOthers;
 use Database\Factories\MailboxMessageFactory;
-use Illuminate\Database\Eloquent\BroadcastsEvents;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -54,7 +54,7 @@ use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 ])]
 class MailboxMessage extends Model
 {
-    use BroadcastsEvents, HasFactory, Searchable;
+    use BroadcastsEventsToOthers, HasFactory, Searchable;
     
     /**
      * The attributes that are mass assignable.

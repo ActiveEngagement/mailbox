@@ -5,8 +5,8 @@ namespace Actengage\Mailbox\Models;
 use Actengage\Mailbox\Events\MailboxMessageAttachmentCreated;
 use Actengage\Mailbox\Events\MailboxMessageAttachmentDeleted;
 use Actengage\Mailbox\Events\MailboxMessageAttachmentUpdated;
+use Actengage\Mailbox\Support\BroadcastsEventsToOthers;
 use Database\Factories\MailboxMessageAttachmentFactory;
-use Illuminate\Database\Eloquent\BroadcastsEvents;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -35,7 +35,7 @@ use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 ])]
 class MailboxMessageAttachment extends Model
 {
-    use BroadcastsEvents, HasFactory, Searchable;
+    use BroadcastsEventsToOthers, HasFactory, Searchable;
     
     /**
      * The attributes that are mass assignable.

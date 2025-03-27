@@ -6,9 +6,9 @@ use Actengage\Mailbox\Events\MailboxSubscriptionCreated;
 use Actengage\Mailbox\Events\MailboxSubscriptionDeleted;
 use Actengage\Mailbox\Events\MailboxSubscriptionUpdated;
 use Actengage\Mailbox\Observers\MailboxSubscriptionObserver;
+use Actengage\Mailbox\Support\BroadcastsEventsToOthers;
 use DateTime;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
-use Illuminate\Database\Eloquent\BroadcastsEvents;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -31,7 +31,7 @@ use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 #[ObservedBy(MailboxSubscriptionObserver::class)]
 class MailboxSubscription extends Model
 {
-    use BroadcastsEvents;
+    use BroadcastsEventsToOthers;
 
     /**
      * The attributes that are mass assignable.

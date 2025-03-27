@@ -5,8 +5,8 @@ namespace Actengage\Mailbox\Models;
 use Actengage\Mailbox\Events\MailboxCreated;
 use Actengage\Mailbox\Events\MailboxDeleted;
 use Actengage\Mailbox\Events\MailboxUpdated;
+use Actengage\Mailbox\Support\BroadcastsEventsToOthers;
 use Database\Factories\MailboxFactory;
-use Illuminate\Database\Eloquent\BroadcastsEvents;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -28,7 +28,7 @@ use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 ])]
 class Mailbox extends Model
 {    
-    use BroadcastsEvents, HasFactory;
+    use BroadcastsEventsToOthers, HasFactory;
 
     /**
      * The attributes that are mass assignable.
