@@ -17,6 +17,22 @@ class EmailAddress extends Data implements Stringable
     }
 
     /**
+     * Get the TLD of the email address.
+     *
+     * @return string
+     */
+    public function domain(): ?string
+    {
+        $parts = explode('@', $this->email);
+
+        if(isset($parts[1])) {
+            return $parts[1];
+        }
+        
+        return null;
+    }
+
+    /**
      * Create an email address from a string
      *
      * @param string $email
