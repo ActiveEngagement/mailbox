@@ -18,6 +18,7 @@ use Microsoft\Graph\Core\Requests\BatchResponseItem;
 use Microsoft\Graph\Core\Tasks\PageIterator;
 use Microsoft\Graph\Generated\Models\MailFolder;
 use Microsoft\Graph\Generated\Models\Message;
+use Microsoft\Graph\Generated\Models\MessageCollectionResponse;
 use Microsoft\Graph\Generated\Models\ODataErrors\ODataError;
 use Microsoft\Graph\Generated\Users\Item\Messages\Item\CreateForward\CreateForwardPostRequestBody;
 use Microsoft\Graph\Generated\Users\Item\Messages\Item\CreateReply\CreateReplyPostRequestBody;
@@ -69,7 +70,7 @@ class MessageService
             ->messages()
             ->get(new MessagesRequestBuilderGetRequestConfiguration(
                 queryParameters: new MessagesRequestBuilderGetQueryParameters(
-                    top: 100,
+                    top: 200,
                     orderby: ['receivedDateTime asc'],
                     expand: ['attachments'],
                     select: [               
@@ -111,11 +112,11 @@ class MessageService
             $response, $this->service->client()->getRequestAdapter()
         );
 
-        while($pageIterator->hasNext()) {
-            $pageIterator->iterate(function(Message $message) use ($messages) {
-                $messages->push($message);
-            });
-        }
+        $pageIterator->iterate(function(Message $message) use ($messages) {
+            $messages->push($message);
+
+            return true;
+        });
 
         return $messages;
     }
@@ -314,7 +315,7 @@ class MessageService
 
         $model->fill([
             'conversation_id' => $message->getConversationId(),
-            'conversation_index' => $message->getConversationIndex(),
+            'conversation_index' => (string) $message->getConversationIndex(),
             'internet_message_id' => $message->getInternetMessageId(),
             'in_reply_to' => $this->getInternetMessageHeader('in-reply-to', $message),
             'references' => $this->getInternetMessageHeader('references', $message),
