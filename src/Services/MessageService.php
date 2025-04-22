@@ -69,8 +69,38 @@ class MessageService
             ->messages()
             ->get(new MessagesRequestBuilderGetRequestConfiguration(
                 queryParameters: new MessagesRequestBuilderGetQueryParameters(
-                    top: 1000,
-                    expand: ['attachments']
+                    top: 100,
+                    orderby: ['receivedDateTime asc'],
+                    expand: ['attachments'],
+                    select: [               
+                        'id',
+                        'subject',
+                        'bodyPreview',
+                        'body',
+                        'sender',
+                        'from',
+                        'toRecipients',
+                        'ccRecipients',
+                        'bccRecipients',
+                        'replyTo',
+                        'conversationId',
+                        'conversationIndex',
+                        'internetMessageId',
+                        'internetMessageHeaders',
+                        'isRead',
+                        'isDraft',
+                        'importance',
+                        'flag',
+                        'hasAttachments',
+                        'receivedDateTime',
+                        'sentDateTime',
+                        'createdDateTime',
+                        'lastModifiedDateTime',
+                        'inferenceClassification',
+                        'webLink',
+                        'parentFolderId',
+                        'categories'
+                    ]
                 )
             ))
             ->wait();
@@ -252,6 +282,24 @@ class MessageService
     } 
 
     /**
+     * Get a specific internet message header from the given message.
+     * 
+     * @param \Microsoft\Graph\Generated\Models\Message $message
+     */
+    public function getInternetMessageHeader(string $key, Message $message): ?string
+    {
+        if($headers = $message->getInternetMessageHeaders()) {
+            foreach ($headers as $header) {
+                if (strtolower($header->getName()) === $key) {
+                    return $header->getValue();
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Save the message to the database.
      *
      * @param Mailbox $mailbox
@@ -267,6 +315,9 @@ class MessageService
         $model->fill([
             'conversation_id' => $message->getConversationId(),
             'conversation_index' => $message->getConversationIndex(),
+            'internet_message_id' => $message->getInternetMessageId(),
+            'in_reply_to' => $this->getInternetMessageHeader('in-reply-to', $message),
+            'references' => $this->getInternetMessageHeader('references', $message),
             'is_read' => $message->getIsRead(),
             'is_draft' => $message->getIsDraft(),
             'flag' => $message->getFlag(),
