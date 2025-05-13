@@ -2,12 +2,11 @@
 
 namespace Actengage\Mailbox\Data;
 
-use Actengage\Mailbox\Enums\ComparisonOperator;
 use Actengage\Mailbox\Enums\LogicalOperator;
 use Spatie\LaravelData\Data;
 use Stringable;
 
-/** @typescript Filter */
+/** @typescript Conditional */
 class Conditional extends Data implements Stringable
 {
     /**
