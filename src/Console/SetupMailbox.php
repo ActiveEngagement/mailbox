@@ -2,6 +2,8 @@
 
 namespace Actengage\Mailbox\Console;
 
+use Actengage\Mailbox\Data\Conditional;
+use Actengage\Mailbox\Data\Filter;
 use Actengage\Mailbox\Facades\Client;
 use Actengage\Mailbox\Facades\Folders;
 use Actengage\Mailbox\Facades\Messages;
@@ -12,6 +14,8 @@ use Actengage\Mailbox\Models\MailboxMessage;
 use Actengage\Mailbox\Models\MailboxSubscription;
 use Illuminate\Console\Command;
 use Illuminate\Contracts\Console\PromptsForMissingInput;
+use Illuminate\Support\Carbon;
+use Microsoft\Graph\Generated\Models\Message;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputOption;
@@ -40,7 +44,7 @@ class SetupMailbox extends Command implements PromptsForMissingInput
      *
      * @throws \InvalidArgumentException
      */
-    public function handle()
+    public function handle(): bool
     {
         $progress = $this->output->createProgressBar(4);
         $progress->start();
@@ -56,8 +60,17 @@ class SetupMailbox extends Command implements PromptsForMissingInput
 
         $progress->setMessage('Creating Messages');
         $progress->advance();
-
-        $this->createMailboxMessages($mailbox);
+        
+        $this->createMailboxMessages(
+            mailbox: $mailbox,
+            filter: when(
+                condition: $this->option('after'),
+                value: fn (): Filter => Filter::greaterThanOrEquals(
+                    field: 'receivedDateTime',
+                    value: Carbon::parse($this->option('after'))
+                )
+            )
+        );        
 
         $progress->setMessage('Creating Subscriptions');
         $progress->advance();
@@ -68,6 +81,8 @@ class SetupMailbox extends Command implements PromptsForMissingInput
         $progress->clear();
 
         $this->info("$mailbox->email was setup!");
+
+        return true;
     }
 
     /**
@@ -94,7 +109,7 @@ class SetupMailbox extends Command implements PromptsForMissingInput
      */
     protected function createMailboxFolders(Mailbox $mailbox): void
     {
-        MailboxFolder::withoutBroadcasting(function() use ($mailbox) {
+        MailboxFolder::withoutBroadcasting(function() use ($mailbox): void {
             $folders = Folders::all($this->argument('email'));
     
             foreach($folders as $folder) {
@@ -107,16 +122,19 @@ class SetupMailbox extends Command implements PromptsForMissingInput
      * Create the mailbox messages if they don't exist.
      *
      * @param Mailbox $mailbox
+     * @param Conditional|Filter|string|null $filter
      * @return void
      */
-    protected function createMailboxMessages(Mailbox $mailbox): void
+    protected function createMailboxMessages(Mailbox $mailbox, Conditional|Filter|string|null $filter = null): void
     {
-        MailboxMessage::withoutBroadcasting(function() use ($mailbox) {
-            $messages = Messages::all($this->argument('email'));
-
-            foreach($messages as $message) {
-                Messages::save($mailbox, $message);
-            }
+        MailboxMessage::withoutBroadcasting(function() use ($mailbox, $filter): void {
+            Messages::all(
+                userId: $this->argument('email'),
+                filter: $filter,
+                iterator: function(Message $message) use ($mailbox): void {
+                    Messages::save($mailbox, $message);
+                },
+            );
         });
     }
 
@@ -128,7 +146,7 @@ class SetupMailbox extends Command implements PromptsForMissingInput
      */
     protected function createMailboxSubscriptions(Mailbox $mailbox): void
     {
-        MailboxSubscription::withoutBroadcasting(function() use ($mailbox) {
+        MailboxSubscription::withoutBroadcasting(function() use ($mailbox): void {
             $mailbox->subscriptions->each->delete();
 
             Subscriptions::subscribe($mailbox);
@@ -156,6 +174,7 @@ class SetupMailbox extends Command implements PromptsForMissingInput
     {
         return [
             ['connection', 'c', InputOption::VALUE_OPTIONAL, 'The name of the connection to test.', 'default'],
+            ['after', 'a', InputOption::VALUE_OPTIONAL, 'Filter messages received on or after this date.', 'default'],
         ];
     }
 }

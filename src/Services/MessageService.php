@@ -2,6 +2,8 @@
 
 namespace Actengage\Mailbox\Services;
 
+use Actengage\Mailbox\Data\Conditional;
+use Actengage\Mailbox\Data\Filter;
 use Actengage\Mailbox\Facades\Attachments;
 use Actengage\Mailbox\Facades\Folders;
 use Actengage\Mailbox\Facades\Models;
@@ -10,7 +12,6 @@ use Actengage\Mailbox\Models\MailboxFolder;
 use Actengage\Mailbox\Models\MailboxMessage;
 use Http\Promise\Promise;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Storage;
 use Microsoft\Graph\BatchRequestBuilder;
 use Microsoft\Graph\Core\Requests\BatchRequestContent;
 use Microsoft\Graph\Core\Requests\BatchResponseContent;
@@ -18,13 +19,13 @@ use Microsoft\Graph\Core\Requests\BatchResponseItem;
 use Microsoft\Graph\Core\Tasks\PageIterator;
 use Microsoft\Graph\Generated\Models\MailFolder;
 use Microsoft\Graph\Generated\Models\Message;
-use Microsoft\Graph\Generated\Models\MessageCollectionResponse;
 use Microsoft\Graph\Generated\Models\ODataErrors\ODataError;
 use Microsoft\Graph\Generated\Users\Item\Messages\Item\CreateForward\CreateForwardPostRequestBody;
 use Microsoft\Graph\Generated\Users\Item\Messages\Item\CreateReply\CreateReplyPostRequestBody;
 use Microsoft\Graph\Generated\Users\Item\Messages\Item\CreateReplyAll\CreateReplyAllPostRequestBody;
 use Microsoft\Graph\Generated\Users\Item\Messages\Item\MessageItemRequestBuilderGetQueryParameters;
 use Microsoft\Graph\Generated\Users\Item\Messages\Item\MessageItemRequestBuilderGetRequestConfiguration;
+use Microsoft\Graph\Generated\Users\Item\Messages\Item\Move\MovePostRequestBody;
 use Microsoft\Graph\Generated\Users\Item\Messages\MessagesRequestBuilderGetRequestConfiguration;
 use Microsoft\Graph\Generated\Users\Item\Messages\MessagesRequestBuilderGetQueryParameters;
 
@@ -57,22 +58,28 @@ class MessageService
     }
 
     /**
-     * Get a all the folders as a flattened collection for the given user.
+     * Uses a PageIterator to all the messages in the mailbox, which calls the
+     * iterator function for each message that is received. This function does
+     * not return anything, since the amount of memory returned could exceed
+     * what is available.
      *
      * @param string $userId
-     * @return Collection<Message>
+     * @param callable(Message): void $iterator
+     * @param Conditional|Filter|string|null $filter
+     * @return void
      * @throws \Exception
      */
-    public function all(string $userId): Collection
+    public function all(string $userId, callable $iterator, Conditional|Filter|string|null $filter = null): void
     {
         $response = $this->service->client()->users()
             ->byUserId($userId)
             ->messages()
             ->get(new MessagesRequestBuilderGetRequestConfiguration(
                 queryParameters: new MessagesRequestBuilderGetQueryParameters(
-                    top: 200,
+                    top: 100,
                     orderby: ['receivedDateTime asc'],
                     expand: ['attachments'],
+                    filter: (string) $filter,
                     select: [               
                         'id',
                         'subject',
@@ -106,19 +113,15 @@ class MessageService
             ))
             ->wait();
 
-        $messages = collect();
-
         $pageIterator = new PageIterator(
             $response, $this->service->client()->getRequestAdapter()
         );
 
-        $pageIterator->iterate(function(Message $message) use ($messages) {
-            $messages->push($message);
+        $pageIterator->iterate(function(Message $message) use ($iterator): bool {
+            $iterator($message);
 
             return true;
         });
-
-        return $messages;
     }
 
     /**
@@ -150,6 +153,16 @@ class MessageService
         $draft = new Message();
         $draft->setSubject($message->subject);
         $draft->setIsDraft(true);
+        $draft->setInternetMessageHeaders([
+            [
+                'name' => 'In-Reply-To',
+                'value' => $message->internet_message_id
+            ],
+            [
+                'name' => 'References',
+                'value' => $message->internet_message_id
+            ]
+        ]);
 
         $request = new CreateReplyPostRequestBody();
         $request->setMessage($draft);
@@ -175,10 +188,10 @@ class MessageService
         $draft = new Message();
         $draft->setSubject($message->subject);
         $draft->setIsDraft(true);
-
+        
         $request = new CreateReplyAllPostRequestBody();
         $request->setMessage($draft);
-
+        
         return $this->service->client()->users()
             ->byUserId($message->mailbox->email)
             ->messages()
@@ -229,6 +242,25 @@ class MessageService
             ->messages()
             ->byMessageId($message->external_id)
             ->patch($model);
+    }
+
+    /**
+     * Move the message using the Graph API.
+     *
+     * @param MailboxMessage $message
+     * @return Promise<Message|null>
+     */
+    public function move(MailboxMessage $message, MailboxFolder $folder): Promise
+    {
+        $moveRequest = new MovePostRequestBody();
+        $moveRequest->setDestinationId($folder->external_id);
+
+        return $this->service->client()->users()
+            ->byUserId($message->mailbox->email)
+            ->messages()
+            ->byMessageId($message->external_id)
+            ->move()
+            ->post($moveRequest);
     }
 
     /**

@@ -124,14 +124,14 @@ class Mailbox extends Model
     }
 
     /**
-     * Get the Drafts folder.
+     * Get the Conversation History folder.
      *
      * @return MailboxFolder|null
      */
-    public function draftsFolder(): ?MailboxFolder
+    public function conversationHistoryFolder(): ?MailboxFolder
     {
-        return Cache::rememberForever("mailbox.{$this->id}.folders.drafts", function() {
-            return $this->folders()->whereName('Drafts')->first();
+        return Cache::rememberForever("mailbox.{$this->id}.folders.conversationHistory", function() {
+            return $this->folders()->whereName('Conversation History')->first();
         });
     }
 
@@ -144,6 +144,54 @@ class Mailbox extends Model
     {
         return Cache::rememberForever("mailbox.{$this->id}.folders.deletedItems", function() {
             return $this->folders()->whereName('Deleted Items')->first();
+        });
+    }
+
+    /**
+     * Get the Drafts folder.
+     *
+     * @return MailboxFolder|null
+     */
+    public function draftsFolder(): ?MailboxFolder
+    {
+        return Cache::rememberForever("mailbox.{$this->id}.folders.drafts", function() {
+            return $this->folders()->whereName('Drafts')->first();
+        });
+    }
+
+    /**
+     * Get the Inbox folder.
+     *
+     * @return MailboxFolder|null
+     */
+    public function inboxFolder(): ?MailboxFolder
+    {
+        return Cache::rememberForever("mailbox.{$this->id}.folders.inbox", function() {
+            return $this->folders()->whereName('Inbox')->first();
+        });
+    }
+
+    /**
+     * Get the Junk Email folder.
+     *
+     * @return MailboxFolder|null
+     */
+    public function junkEmailFolder(): ?MailboxFolder
+    {
+        return Cache::rememberForever("mailbox.{$this->id}.folders.junkEmail", function() {
+            return $this->folders()->whereName('Junk Email')->first();
+        });
+    }
+
+    /**
+     * Get the Outbox folder.
+     *
+     * @return MailboxFolder|null
+     */
+    public function outboxFolder(): ?MailboxFolder
+    {
+        return Cache::rememberForever("mailbox.{$this->id}.folders.outbox", function() {
+            return $this->folders()->whereName('Outbox')->first();
         });
     }
 

@@ -32,13 +32,14 @@ class RenewSubscriptions extends Command
     public function handle()
     {
         $mailboxes = $this->option('email')
-            ? Mailbox::email($this->option('email'))->firstOrFail()
+            ? Mailbox::email($this->option('email'))->get()
             : Mailbox::all();
 
         foreach($mailboxes as $mailbox) {
             $subscriptions = $mailbox->subscriptions()
-                ->expiresAt(now()->subHour(1))
+                ->expiresAt(now()->subHour())
                 ->get();
+                
             
             if(!$subscriptions->count()) {
                 $this->warn("$mailbox->email has no subscriptions to renew!");
