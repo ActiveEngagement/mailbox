@@ -4,6 +4,7 @@ namespace Actengage\Mailbox\Models;
 
 use Actengage\Mailbox\Events\MailboxFolderCreated;
 use Actengage\Mailbox\Events\MailboxFolderDeleted;
+use Actengage\Mailbox\Events\MailboxFolderDeleting;
 use Actengage\Mailbox\Events\MailboxFolderUpdated;
 use Actengage\Mailbox\Observers\MailboxFolderObserver;
 use Actengage\Mailbox\Support\BroadcastsEventsToOthers;
@@ -59,6 +60,7 @@ class MailboxFolder extends Model
     protected $dispatchesEvents = [
         'created' => MailboxFolderCreated::class,
         'updated' => MailboxFolderUpdated::class,
+        'deleting' => MailboxFolderDeleting::class,
         'deleted' => MailboxFolderDeleted::class,
     ];
 

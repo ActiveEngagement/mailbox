@@ -4,6 +4,7 @@ namespace Actengage\Mailbox\Models;
 
 use Actengage\Mailbox\Events\MailboxCreated;
 use Actengage\Mailbox\Events\MailboxDeleted;
+use Actengage\Mailbox\Events\MailboxDeleting;
 use Actengage\Mailbox\Events\MailboxUpdated;
 use Actengage\Mailbox\Support\BroadcastsEventsToOthers;
 use Database\Factories\MailboxFactory;
@@ -50,6 +51,7 @@ class Mailbox extends Model
     protected $dispatchesEvents = [
         'created' => MailboxCreated::class,
         'updated' => MailboxUpdated::class,
+        'deleting' => MailboxDeleting::class,
         'deleted' => MailboxDeleted::class,
     ];
 

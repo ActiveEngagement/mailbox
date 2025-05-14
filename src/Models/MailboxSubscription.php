@@ -4,6 +4,7 @@ namespace Actengage\Mailbox\Models;
 
 use Actengage\Mailbox\Events\MailboxSubscriptionCreated;
 use Actengage\Mailbox\Events\MailboxSubscriptionDeleted;
+use Actengage\Mailbox\Events\MailboxSubscriptionDeleting;
 use Actengage\Mailbox\Events\MailboxSubscriptionUpdated;
 use Actengage\Mailbox\Observers\MailboxSubscriptionObserver;
 use Actengage\Mailbox\Support\BroadcastsEventsToOthers;
@@ -57,6 +58,7 @@ class MailboxSubscription extends Model
     protected $dispatchesEvents = [
         'created' => MailboxSubscriptionCreated::class,
         'updated' => MailboxSubscriptionUpdated::class,
+        'deleting' => MailboxSubscriptionDeleting::class,
         'deleted' => MailboxSubscriptionDeleted::class,
     ];
 

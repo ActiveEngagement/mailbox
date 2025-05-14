@@ -10,6 +10,7 @@ use Actengage\Mailbox\Casts\Recipient;
 use Actengage\Mailbox\Casts\Recipients;
 use Actengage\Mailbox\Events\MailboxMessageCreated;
 use Actengage\Mailbox\Events\MailboxMessageDeleted;
+use Actengage\Mailbox\Events\MailboxMessageDeleting;
 use Actengage\Mailbox\Events\MailboxMessageUpdated;
 use Actengage\Mailbox\Support\BroadcastsEventsToOthers;
 use Database\Factories\MailboxMessageFactory;
@@ -100,6 +101,7 @@ class MailboxMessage extends Model
     protected $dispatchesEvents = [
         'created' => MailboxMessageCreated::class,
         'updated' => MailboxMessageUpdated::class,
+        'deleting' => MailboxMessageDeleting::class,
         'deleted' => MailboxMessageDeleted::class,
     ];
 

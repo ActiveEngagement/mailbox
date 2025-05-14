@@ -4,6 +4,7 @@ namespace Actengage\Mailbox\Models;
 
 use Actengage\Mailbox\Events\MailboxMessageAttachmentCreated;
 use Actengage\Mailbox\Events\MailboxMessageAttachmentDeleted;
+use Actengage\Mailbox\Events\MailboxMessageAttachmentDeleting;
 use Actengage\Mailbox\Events\MailboxMessageAttachmentUpdated;
 use Actengage\Mailbox\Support\BroadcastsEventsToOthers;
 use Database\Factories\MailboxMessageAttachmentFactory;
@@ -70,6 +71,7 @@ class MailboxMessageAttachment extends Model
     protected $dispatchesEvents = [
         'created' => MailboxMessageAttachmentCreated::class,
         'updated' => MailboxMessageAttachmentUpdated::class,
+        'deleting' => MailboxMessageAttachmentDeleting::class,
         'deleted' => MailboxMessageAttachmentDeleted::class,
     ];
 
