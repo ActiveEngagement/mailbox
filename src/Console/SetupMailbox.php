@@ -174,7 +174,7 @@ class SetupMailbox extends Command implements PromptsForMissingInput
     {
         return [
             ['connection', 'c', InputOption::VALUE_OPTIONAL, 'The name of the connection to test.', 'default'],
-            ['after', 'a', InputOption::VALUE_OPTIONAL, 'Filter messages received on or after this date.', 'default'],
+            ['after', 'a', InputOption::VALUE_OPTIONAL, 'Filter messages received on or after this date.', null],
         ];
     }
 }
