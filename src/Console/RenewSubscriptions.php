@@ -37,22 +37,22 @@ class RenewSubscriptions extends Command
 
         foreach($mailboxes as $mailbox) {
             $subscriptions = $mailbox->subscriptions()
-                ->expiresAt(now()->subHour())
-                ->get();
-                
+                ->expiresAt(now()->addHour())
+                ->get();                
             
             if(!$subscriptions->count()) {
                 $this->warn("$mailbox->email has no subscriptions to renew!");
+
+                continue;
             }
-            else {
-                Client::connect($mailbox->connection);
+            
+            Client::connect($mailbox->connection);
 
-                Subscriptions::subscribe($mailbox);
-        
-                $subscriptions->each->delete();
+            Subscriptions::subscribe($mailbox);
+    
+            $subscriptions->each->delete();
 
-                $this->info("The subscriptions $mailbox->email have been resubscribed!");
-            }            
+            $this->info("The subscriptions $mailbox->email have been resubscribed!");
         }
     }
 
