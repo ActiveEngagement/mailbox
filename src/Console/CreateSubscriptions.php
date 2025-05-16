@@ -32,11 +32,11 @@ class CreateSubscriptions extends Command
     public function handle()
     {
         $mailboxes = $this->option('email')
-            ? Mailbox::email($this->option('email'))->firstOrFail()
+            ? Mailbox::email($this->option('email'))->get()
             : Mailbox::all();
 
         foreach($mailboxes as $mailbox) {
-            $mailbox->subscriptions()->get()->map->delete();
+            $mailbox->subscriptions->each->delete();
             
             Client::connect($mailbox->connection);
 

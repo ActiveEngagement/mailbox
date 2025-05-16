@@ -120,20 +120,17 @@ class SubscriptionService
      * Delete the subscription.
      *
      * @param MailboxSubscription|string $subscription
-     * @return void
+     * @return Promise<null>
      */
-    public function delete(MailboxSubscription|string $subscription): void
+    public function delete(MailboxSubscription|string $subscription): Promise
     {
         $id = $subscription instanceof MailboxSubscription
             ? $subscription->getKey()
             : $subscription;
 
-        $this->service->client()
+        return $this->service->client()
             ->subscriptions()
             ->bySubscriptionId($id)
-            ->delete()
-            ->then(null, function() {
-                //
-            });
+            ->delete();
     }
 }
