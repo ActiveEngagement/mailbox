@@ -28,6 +28,12 @@ it('casts from accepted types correctly', function() {
     expect($message->from->name)->toBe('John F. Doe');
     
     /** @var EmailAddress */
+    $message->from = ['email' => 'test@test.com', 'name' => 'test'];
+
+    expect($message->from->email)->toBe('test@test.com'); 
+    expect($message->from->name)->toBe('test');
+    
+    /** @var EmailAddress */
     $message->from = 'test@test.com';
 
     expect($message->from)->toBeInstanceOf(EmailAddress::class);

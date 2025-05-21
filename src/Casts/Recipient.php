@@ -55,6 +55,10 @@ class Recipient implements CastsAttributes
                 'name' => $address->getName()
             ]);
         }
+        
+        if(is_array($value)) {
+            return (string) EmailAddress::from($value);
+        }
 
         throw new InvalidArgumentException("Unsupported type");
     }
