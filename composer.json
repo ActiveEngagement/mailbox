@@ -9,7 +9,7 @@
         }
     ],
     "scripts": {
-        "test": "phpunit"
+        "test": "pest"
     },
     "require": {
         "php": "^8.4",

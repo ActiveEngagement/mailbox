@@ -32,6 +32,12 @@ it('casts from accepted types correctly', function() {
     expect($message->to[0]->name)->toBe('John F. Doe');
     
     /** @var Collection<EmailAddress> */
+    $message->to = [['email' => 'test@test.com', 'name' => 'test']];
+
+    expect($message->to[0]->email)->toBe('test@test.com'); 
+    expect($message->to[0]->name)->toBe('test');
+    
+    /** @var Collection<EmailAddress> */
     $message->to = ['test@test.com'];
 
     expect($message->to[0]->email)->toBe('test@test.com'); 

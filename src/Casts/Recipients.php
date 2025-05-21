@@ -25,7 +25,7 @@ class Recipients implements CastsAttributes
             return null;
         }
 
-        return collect(json_decode($value, true))->map(function(string $value) {
+        return collect(json_decode($value, true))->map(function(string $value): EmailAddress {
             return EmailAddress::fromString($value);
         });
     }
@@ -62,6 +62,12 @@ class Recipients implements CastsAttributes
 
             if($recipient instanceof EmailAddress) {
                 $recipients[] = (string) $recipient;
+
+                continue;
+            }
+
+            if(is_array($recipient)) {
+                $recipients[] = (string) EmailAddress::from($recipient);
 
                 continue;
             }

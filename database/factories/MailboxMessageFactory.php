@@ -14,7 +14,7 @@ use Microsoft\Graph\Generated\Models\FollowupFlagStatus;
 use Microsoft\Graph\Generated\Models\ItemBody;
 
 /**
- * @template TModel of \Actengage\Mailbox\MailboxMessage
+ * @template TModel of \Actengage\Mailbox\Models\MailboxMessage
  *
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<TModel>
  */
@@ -57,6 +57,8 @@ class MailboxMessageFactory extends Factory
             'mailbox_id' => Mailbox::factory(),
             'folder_id' => MailboxFolder::factory(),
             'external_id' => fake()->uuid(),
+            'conversation_id' => fake()->uuid(),
+            'conversation_index' => fake()->uuid(),
             'is_read' => false,
             'is_draft' => false,
             'flag' => $flag,
