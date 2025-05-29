@@ -95,6 +95,18 @@ class MailboxFolder extends Model
     }
 
     /**
+     * Scope the query to the given mailbox.
+     *
+     * @param Builder $query
+     * @param MailboxFolder|string ...$folder
+     * @return void
+     */
+    public function scopeMailbox(Builder $query, Mailbox ...$mailbox): void
+    {
+        $query->whereIn('mailbox_id', $mailbox);
+    }
+
+    /**
      * Scope the query to the given folders.
      *
      * @param Builder $query
