@@ -138,7 +138,7 @@ class MessageService
             ->byUserId($mailbox->email)
             ->messages()
             ->post($draft)
-            ->then(function(Message $model) use ($mailbox) {
+            ->then(function(Message $model) use ($mailbox): MailboxMessage {
                 return $this->save($mailbox, $model);
             });
     }
@@ -153,16 +153,6 @@ class MessageService
         $draft = new Message();
         $draft->setSubject($message->subject);
         $draft->setIsDraft(true);
-        $draft->setInternetMessageHeaders([
-            [
-                'name' => 'In-Reply-To',
-                'value' => $message->internet_message_id
-            ],
-            [
-                'name' => 'References',
-                'value' => $message->internet_message_id
-            ]
-        ]);
 
         $request = new CreateReplyPostRequestBody();
         $request->setMessage($draft);
@@ -173,7 +163,7 @@ class MessageService
             ->byMessageId($message->external_id)
             ->createReply()
             ->post($request)
-            ->then(function(Message $model) use ($message) {
+            ->then(function(Message $model) use ($message): MailboxMessage {
                 return $this->save($message->mailbox, $model);
             });
     }
@@ -198,7 +188,7 @@ class MessageService
             ->byMessageId($message->external_id)
             ->createReplyAll()
             ->post($request)
-            ->then(function(Message $model) use ($message) {
+            ->then(function(Message $model) use ($message): MailboxMessage {
                 return $this->save($message->mailbox, $model);
             });
     }
@@ -222,7 +212,7 @@ class MessageService
             ->byMessageId($message->external_id)
             ->createForward()
             ->post($request)
-            ->then(function(Message $model) use ($message) {
+            ->then(function(Message $model) use ($message): MailboxMessage {
                 return $this->save($message->mailbox, $model);
             });
     }
@@ -372,7 +362,7 @@ class MessageService
         }
         else {
             Folders::find($mailbox, $message->getParentFolderId())
-                ->then(function(MailFolder $folder) use ($model, $mailbox) {
+                ->then(function(MailFolder $folder) use ($model, $mailbox): void {
                     $model->folder()->associate(Folders::save($mailbox, $folder));
                 });
         }
