@@ -19,7 +19,8 @@
         "spatie/laravel-data": "^4.13",
         "spatie/laravel-typescript-transformer": "^2.5",
         "laravel/scout": "^10.13",
-        "cardinalby/content-disposition": "^1.1"
+        "cardinalby/content-disposition": "^1.1",
+        "kalnoy/nestedset": "^6.0"
     },
     "require-dev": {
         "orchestra/testbench": "^9.5",

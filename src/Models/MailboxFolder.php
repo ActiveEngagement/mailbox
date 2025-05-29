@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Kalnoy\Nestedset\NodeTrait;
 use Spatie\TypeScriptTransformer\Attributes\LiteralTypeScriptType;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
@@ -31,12 +32,13 @@ use Spatie\TypeScriptTransformer\Attributes\TypeScript;
     'updated_at' => 'string',
     'mailbox?' => 'Mailbox',
     'parent?' => 'MailboxFolder',
+    'children?' => 'MailboxFolder[]',
     'messages?' => 'MailboxMessage[]',
 ])]
 #[ObservedBy(MailboxFolderObserver::class)]
 class MailboxFolder extends Model
 {
-    use BroadcastsEventsToOthers, HasFactory;
+    use BroadcastsEventsToOthers, HasFactory, NodeTrait;
     
     /**
      * The attributes that are mass assignable.
