@@ -47,7 +47,6 @@ class AttachmentService
         $document = HTMLDocument::createFromString($message->body, LIBXML_HTML_NOIMPLIED);
 
         $urls = [];
-
         
         foreach($document->querySelectorAll('a') as $node) {
             if(!$href = $node->getAttribute('href')) {
@@ -78,7 +77,7 @@ class AttachmentService
 
         if(!$mailboxConfig = Arr::get(
             config()->array('mailbox.mailboxes'),
-            $message->from->email
+            $message->mailbox->email
         )) {
             return false;
         };
@@ -111,7 +110,11 @@ class AttachmentService
      */
     public function processUrlsAsAttachments(MailboxMessage $message): void
     {
-        dd(123);
+        if(!$this->shouldProcessUrlsAsAttachments($message)) {
+            dispatch(new FinishedProcessingUrlsAsAttachments($message));
+            
+            return;
+        }
 
         /** @var Collection<int, ShouldQueue> */
         $jobs = collect($this->extractUrls($message))->map(
