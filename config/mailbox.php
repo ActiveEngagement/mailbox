@@ -36,5 +36,31 @@ return [
             'storage_disk' => env('MAILBOX_STORAGE_DISK', 'public'),
             'visibility' => env('MAILBOX_STORAGE_VISIBILITY', 'private')
         ]
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Mailbox Config
+    |--------------------------------------------------------------------------
+    |
+    | This value is an array of mailboxes that can define options how when to
+    | enable or disable specific actions within the package. The array keys
+    | are the mailbox emails, while the value is an array of key/values.
+    | 
+    */
+
+    'mailboxes' => [
+        'foo@example.com' => [
+            'process_urls_as_attachments' => [
+                'enabled' => true,
+                'pattern' => '/(.+)@actengage.net/'
+            ]
+        ],        
+        'bar@example.com' => [
+            'process_urls_as_attachments' => [
+                'enabled' => false,
+                'pattern' => null,
+            ]
+        ]
     ]
 ];

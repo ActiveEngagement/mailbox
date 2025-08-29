@@ -8,11 +8,14 @@ use Actengage\Mailbox\Models\MailboxMessage;
 use Actengage\Mailbox\Models\MailboxMessageAttachment;
 use cardinalby\ContentDisposition\ContentDisposition;
 use Dom\HTMLDocument;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Http\Client\Response;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Microsoft\Graph\Generated\Models\Attachment;
+use Pest\Support\Arr;
 
 class AttachmentService
 {
@@ -62,6 +65,45 @@ class AttachmentService
     }
 
     /**
+     * Determines if the given message should process urls as attachments.
+     * 
+     * @param \Actengage\Mailbox\Models\MailboxMessage $message
+     * @return bool
+     */
+    public function shouldProcessUrlsAsAttachments(MailboxMessage $message): bool
+    {
+        if(!$message->from) {
+            return false;
+        }
+
+        if(!$mailboxConfig = Arr::get(
+            config()->array('mailbox.mailboxes'),
+            $message->from->email
+        )) {
+            return false;
+        };
+
+        $config = array_merge([
+            'enabled' => false,
+            'pattern' => null
+        ], Arr::get($mailboxConfig, 'process_urls_as_attachments'));
+
+        if(!$config['enabled']) {
+            return false;
+        }
+
+        if(!$config['pattern']) {
+            return true;
+        }
+
+        if(!preg_match($config['pattern'], $message->from->email)) {
+            return false;
+        }
+        
+        return true;
+    }
+
+    /**
      * Dispatch the jobs to process the URLs as attachments. 
      *
      * @param MailboxMessage $message
@@ -69,6 +111,9 @@ class AttachmentService
      */
     public function processUrlsAsAttachments(MailboxMessage $message): void
     {
+        dd(123);
+
+        /** @var Collection<int, ShouldQueue> */
         $jobs = collect($this->extractUrls($message))->map(
             fn (string $url) => new ProcessUrlAsAttachment($message, $url)
         );
