@@ -55,7 +55,7 @@ return [
                 'enabled' => true,
                 'pattern' => '/(.+)@actengage.net/'
             ]
-        ],        
+        ],
         'bar@example.com' => [
             'process_urls_as_attachments' => [
                 'enabled' => false,
