@@ -27,13 +27,15 @@ class DestroyMailbox extends Command
     /**
      * Execute the console command.
      */
-    public function handle()
+    public function handle(): int
     {
         $mailbox = Mailbox::email($this->argument('email'))->firstOrFail();
         $mailbox->subscriptions->each->delete();
         $mailbox->delete();
 
         $this->info("$mailbox->email was destroyed!");
+
+        return 0;
     }
 
     /**

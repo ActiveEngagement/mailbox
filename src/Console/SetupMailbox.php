@@ -39,12 +39,8 @@ class SetupMailbox extends Command implements PromptsForMissingInput
 
     /**
      * Execute the console command.
-     *
-     * @return bool|null
-     *
-     * @throws \InvalidArgumentException
      */
-    public function handle(): bool
+    public function handle(): int
     {
         $progress = $this->output->createProgressBar(4);
         $progress->start();
@@ -84,7 +80,7 @@ class SetupMailbox extends Command implements PromptsForMissingInput
 
         $this->info("$mailbox->email was setup!");
 
-        return true;
+        return 0;
     }
 
     /**

@@ -29,7 +29,7 @@ class CreateSubscriptions extends Command
     /**
      * Execute the console command.
      */
-    public function handle()
+    public function handle(): int
     {
         $mailboxes = $this->option('email')
             ? Mailbox::email($this->option('email'))->get()
@@ -42,7 +42,9 @@ class CreateSubscriptions extends Command
 
             Subscriptions::subscribe($mailbox);
 
-            $this->info("The subscriptions $mailbox->email have been resubscribed!");         
+            $this->info("The subscriptions $mailbox->email have been resubscribed!");
+            
+            return 0;
         }
     }
 
