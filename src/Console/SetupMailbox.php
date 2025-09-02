@@ -61,16 +61,18 @@ class SetupMailbox extends Command implements PromptsForMissingInput
         $progress->setMessage('Creating Messages');
         $progress->advance();
         
-        $this->createMailboxMessages(
-            mailbox: $mailbox,
-            filter: when(
-                condition: $this->option('after'),
-                value: fn (): Filter => Filter::greaterThanOrEquals(
-                    field: 'receivedDateTime',
-                    value: Carbon::parse($this->option('after'))
+        if(!$this->option('skip')) {
+            $this->createMailboxMessages(
+                mailbox: $mailbox,
+                filter: when(
+                    condition: $this->option('after'),
+                    value: fn (): Filter => Filter::greaterThanOrEquals(
+                        field: 'receivedDateTime',
+                        value: Carbon::parse($this->option('after'))
+                    )
                 )
-            )
-        );        
+            );
+        }
 
         $progress->setMessage('Creating Subscriptions');
         $progress->advance();
@@ -175,6 +177,7 @@ class SetupMailbox extends Command implements PromptsForMissingInput
         return [
             ['connection', 'c', InputOption::VALUE_OPTIONAL, 'The name of the connection to test.', 'default'],
             ['after', 'a', InputOption::VALUE_OPTIONAL, 'Filter messages received on or after this date.', null],
+            ['skip', 's', InputOption::VALUE_NONE, 'Skip creating existing messages.'],
         ];
     }
 }
