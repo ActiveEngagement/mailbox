@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Actengage\Mailbox\Data;
 
 use Actengage\Mailbox\Enums\LogicalOperator;
@@ -7,53 +9,52 @@ use Spatie\LaravelData\Data;
 use Stringable;
 
 /** @typescript Conditional */
-class Conditional extends Data implements Stringable
+final class Conditional extends Data implements Stringable
 {
     /**
      * Create the conditional.
-     * 
-     * @param \Actengage\Mailbox\Enums\LogicalOperator|null $operator
-     * @param array<int,Conditional|Filter> $filters
+     *
+     * @param  array<int,Conditional|Filter>  $filters
      */
     public function __construct(
-        public LogicalOperator|null $operator = null,
+        public ?LogicalOperator $operator = null,
         public array $filters = [],
     ) {
         //
     }
 
-    public function __tostring(): string
+    public function __toString(): string
     {
-        if(count($this->filters) <= 1) {
+        $separator = sprintf(' %s ', $this->operator instanceof LogicalOperator ? $this->operator->value : 'and');
+
+        if (count($this->filters) <= 1) {
             return implode(
-                separator: " {$this->operator->value} ", array: $this->filters
+                separator: $separator, array: $this->filters
             );
         }
 
-        return sprintf("(%s)", implode(
-            separator: " {$this->operator->value} ", array: $this->filters
+        return sprintf('(%s)', implode(
+            separator: $separator, array: $this->filters
         ));
     }
 
     /**
      * Create an "and" conditional.
-     * 
-     * @param array<int,Conditional|Filter> $filters
-     * @return static
+     *
+     * @param  array<int,Conditional|Filter>  $filters
      */
-    public static function and(array $filters): static
+    public static function and(array $filters): self
     {
-        return new static(LogicalOperator::And, $filters);
+        return new self(operator: LogicalOperator::And, filters: $filters);
     }
 
     /**
      * Create an "or" conditional.
-     * 
-     * @param array<int,Conditional|Filter> $filters
-     * @return static
+     *
+     * @param  array<int,Conditional|Filter>  $filters
      */
-    public static function or(array $filters): static
+    public static function or(array $filters): self
     {
-        return new static(LogicalOperator::Or, $filters);
+        return new self(operator: LogicalOperator::Or, filters: $filters);
     }
 }

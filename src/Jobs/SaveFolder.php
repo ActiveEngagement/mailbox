@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Actengage\Mailbox\Jobs;
 
 use Actengage\Mailbox\Facades\Client;
@@ -8,7 +10,7 @@ use Actengage\Mailbox\Models\Mailbox;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Microsoft\Graph\Generated\Models\MailFolder;
-use Microsoft\Graph\Generated\Models\ODataErrors\ODataError;
+use Throwable;
 
 class SaveFolder implements ShouldQueue
 {
@@ -31,9 +33,13 @@ class SaveFolder implements ShouldQueue
     {
         Client::connect($this->mailbox->connection);
 
-        Folders::find($this->mailbox->email, $this->id)->then(function(MailFolder $folder) {
+        Folders::find($this->mailbox->email, $this->id)->then(function (?MailFolder $folder): void {
+            if (! $folder instanceof MailFolder) {
+                return;
+            }
+
             Folders::save($this->mailbox, $folder);
-        }, function(ODataError $e) {
+        }, function (Throwable $e): void {
             throw $e;
         });
     }

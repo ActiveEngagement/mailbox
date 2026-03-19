@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('mailbox_folders', function (Blueprint $table) {
+        Schema::create('mailbox_folders', function (Blueprint $table): void {
             $table->integerIncrements('id');
             $table->integer('mailbox_id')->unsigned();
             $table->foreign('mailbox_id')->references('id')->on('mailboxes')->cascadeOnDelete()->cascadeOnUpdate();
@@ -32,7 +32,6 @@ return new class extends Migration
     }
 
     /**
-     * 
      * Reverse the migrations.
      */
     public function down(): void

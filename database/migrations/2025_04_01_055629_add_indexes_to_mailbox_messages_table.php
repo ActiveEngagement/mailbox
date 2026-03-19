@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('mailbox_messages', function (Blueprint $table) {
+        Schema::table('mailbox_messages', function (Blueprint $table): void {
             $table->index(['folder_id', 'conversation_id', 'received_at']);
         });
     }
@@ -21,7 +21,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('mailbox_messages', function (Blueprint $table) {
+        Schema::table('mailbox_messages', function (Blueprint $table): void {
             $table->dropIndex(['folder_id', 'conversation_id', 'received_at']);
         });
     }

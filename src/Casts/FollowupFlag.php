@@ -1,15 +1,17 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Actengage\Mailbox\Casts;
 
 use Actengage\Mailbox\Data\FollowupFlag as FollowupFlagData;
 use Actengage\Mailbox\Enums\FollowupFlagStatus;
-use Carbon\Carbon;
 use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
 use Illuminate\Database\Eloquent\Model;
-use InvalidArgumentException;
+use Illuminate\Support\Facades\Date;
 use Microsoft\Graph\Generated\Models\FollowupFlag as BaseFollowupFlag;
 
+/** @implements CastsAttributes<FollowupFlagData|null, FollowupFlagData|BaseFollowupFlag|null> */
 class FollowupFlag implements CastsAttributes
 {
     public bool $withoutObjectCaching = true;
@@ -18,35 +20,30 @@ class FollowupFlag implements CastsAttributes
      * Cast the given value.
      *
      * @param  array<string, mixed>  $attributes
-     * @return FollowupFlagData|null
      */
     public function get(Model $model, string $key, mixed $value, array $attributes): ?FollowupFlagData
     {
         return FollowupFlagData::from([
             'status' => $value ?? FollowupFlagStatus::NotFlagged,
-            'startDateTime' => $attributes['started_at'] ? Carbon::parse($attributes['started_at']) : null,
-            'dueDateTime' => $attributes['due_at'] ? Carbon::parse($attributes['due_at']) : null,
-            'completedDateTime' => $attributes['completed_at'] ? Carbon::parse($attributes['completed_at']) : null,
+            'startDateTime' => isset($attributes['started_at']) && $attributes['started_at'] ? Date::parse($attributes['started_at']) : null,
+            'dueDateTime' => isset($attributes['due_at']) && $attributes['due_at'] ? Date::parse($attributes['due_at']) : null,
+            'completedDateTime' => isset($attributes['completed_at']) && $attributes['completed_at'] ? Date::parse($attributes['completed_at']) : null,
         ]);
     }
- 
+
     /**
      * Prepare the given value for storage.
      *
      * @param  array<string, mixed>  $attributes
-     * @return array<string,mixed>|null
+     * @return array<string, mixed>|null
      */
     public function set(Model $model, string $key, mixed $value, array $attributes): ?array
     {
-        if(is_null($value)) {
-            return null;
-        }
-
-        if($value instanceof BaseFollowupFlag) {
+        if ($value instanceof BaseFollowupFlag) {
             $value = FollowupFlagData::fromFollowupFlag($value);
         }
 
-        if($value instanceof FollowupFlagData) {
+        if ($value instanceof FollowupFlagData) {
             return [
                 'flag' => $value->status,
                 'started_at' => $value->startDateTime,
@@ -55,6 +52,6 @@ class FollowupFlag implements CastsAttributes
             ];
         }
 
-        throw new InvalidArgumentException("Unsupported type");
+        return null;
     }
 }

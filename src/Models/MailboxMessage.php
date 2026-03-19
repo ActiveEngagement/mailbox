@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Actengage\Mailbox\Models;
 
 use Actengage\Mailbox\Casts\Body;
@@ -8,21 +10,60 @@ use Actengage\Mailbox\Casts\FollowupFlag;
 use Actengage\Mailbox\Casts\Importance;
 use Actengage\Mailbox\Casts\Recipient;
 use Actengage\Mailbox\Casts\Recipients;
+use Actengage\Mailbox\Data\EmailAddress;
+use Actengage\Mailbox\Data\FollowupFlag as FollowupFlagData;
+use Actengage\Mailbox\Enums\Importance as ImportanceEnum;
 use Actengage\Mailbox\Events\MailboxMessageCreated;
 use Actengage\Mailbox\Events\MailboxMessageDeleted;
 use Actengage\Mailbox\Events\MailboxMessageDeleting;
 use Actengage\Mailbox\Events\MailboxMessageUpdated;
 use Actengage\Mailbox\Support\BroadcastsEventsToOthers;
 use Database\Factories\MailboxMessageFactory;
+use Illuminate\Broadcasting\Channel;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Laravel\Scout\Searchable;
+use Override;
 use Spatie\TypeScriptTransformer\Attributes\LiteralTypeScriptType;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
+/**
+ * @property int $id
+ * @property int $mailbox_id
+ * @property int|null $folder_id
+ * @property string $external_id
+ * @property string $hash
+ * @property string|null $conversation_id
+ * @property string|null $conversation_index
+ * @property string|null $internet_message_id
+ * @property string|null $in_reply_to
+ * @property string|null $references
+ * @property bool $is_pinned
+ * @property bool $is_read
+ * @property bool $is_draft
+ * @property FollowupFlagData|null $flag
+ * @property ImportanceEnum $importance
+ * @property EmailAddress|null $from
+ * @property Collection<int, EmailAddress>|null $to
+ * @property Collection<int, EmailAddress>|null $cc
+ * @property Collection<int, EmailAddress>|null $bcc
+ * @property Collection<int, EmailAddress>|null $reply_to
+ * @property string|null $subject
+ * @property string|null $body
+ * @property string|null $body_preview
+ * @property string|null $body_message
+ * @property Carbon|null $received_at
+ * @property Carbon|null $sent_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property-read Mailbox $mailbox
+ * @property-read MailboxFolder|null $folder
+ */
 #[TypeScript]
 #[LiteralTypeScriptType([
     'id' => 'number',
@@ -58,12 +99,17 @@ use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 ])]
 class MailboxMessage extends Model
 {
-    use BroadcastsEventsToOthers, HasFactory, Searchable;
-    
+    use BroadcastsEventsToOthers;
+
+    /** @use HasFactory<MailboxMessageFactory> */
+    use HasFactory;
+
+    use Searchable;
+
     /**
      * The attributes that are mass assignable.
      *
-     * @var array<int, string>
+     * @var list<string>
      */
     protected $fillable = [
         'external_id',
@@ -96,7 +142,7 @@ class MailboxMessage extends Model
      *
      * Allows for object-based events for native Eloquent events.
      *
-     * @var array<string,class-string>
+     * @var array<string, class-string>
      */
     protected $dispatchesEvents = [
         'created' => MailboxMessageCreated::class,
@@ -108,9 +154,10 @@ class MailboxMessage extends Model
     /**
      * The attributes that are cast.
      *
-     * @return array
+     * @return array<string, string>
      */
-    public function casts(): array
+    #[Override]
+    protected function casts(): array
     {
         return [
             'external_id' => ExternalId::class,
@@ -135,7 +182,7 @@ class MailboxMessage extends Model
     /**
      * Get the parent mailbox.
      *
-     * @return BelongsTo<Mailbox>
+     * @return BelongsTo<Mailbox, $this>
      */
     public function mailbox(): BelongsTo
     {
@@ -145,7 +192,7 @@ class MailboxMessage extends Model
     /**
      * Get the parent folder.
      *
-     * @return BelongsTo<MailboxFolder>
+     * @return BelongsTo<MailboxFolder, $this>
      */
     public function folder(): BelongsTo
     {
@@ -153,9 +200,9 @@ class MailboxMessage extends Model
     }
 
     /**
-     * Get the parent folder.
+     * Get the attachments.
      *
-     * @return HasMany<MailboxMessageAttachment>
+     * @return HasMany<MailboxMessageAttachment, $this>
      */
     public function attachments(): HasMany
     {
@@ -165,116 +212,89 @@ class MailboxMessage extends Model
     /**
      * Scope the query to the given mailboxes.
      *
-     * @param Builder $query
-     * @param MailboxFolder|string ...$folder
-     * @return void
+     * @param  Builder<MailboxMessage>  $query
      */
-    public function scopeMailbox(Builder $query, Mailbox|string ...$mailbox): void
+    protected function scopeMailbox(Builder $query, Mailbox|string ...$mailbox): void
     {
-        $query->whereIn('mailbox_id', collect($mailbox)->map(function(Mailbox|string $mailbox) {
-            return $mailbox instanceof Mailbox ? $mailbox->getKey() : $mailbox;
-        }));
+        $query->whereIn('mailbox_id', collect($mailbox)->map(fn (Mailbox|string $mailbox): mixed => $mailbox instanceof Mailbox ? $mailbox->getKey() : $mailbox));
     }
 
     /**
      * Scope the query to the given folders.
      *
-     * @param Builder $query
-     * @param MailboxFolder|string ...$folder
-     * @return void
+     * @param  Builder<MailboxMessage>  $query
      */
-    public function scopeFolder(Builder $query, MailboxFolder|string ...$folder): void
+    protected function scopeFolder(Builder $query, MailboxFolder|string ...$folder): void
     {
-        $query->whereIn('folder_id', collect($folder)->map(function(MailboxFolder|string $folder) {
-            return $folder instanceof MailboxFolder ? $folder->getKey() : $folder;
-        }));
+        $query->whereIn('folder_id', collect($folder)->map(fn (MailboxFolder|string $folder): mixed => $folder instanceof MailboxFolder ? $folder->getKey() : $folder));
     }
 
     /**
      * Scope the query to the given external ids.
      *
-     * @param Builder $query
-     * @param MailboxMessage|string ...$message
-     * @return void
+     * @param  Builder<MailboxMessage>  $query
      */
-    public function scopeExternalId(Builder $query, MailboxMessage|string ...$message): void
+    protected function scopeExternalId(Builder $query, MailboxMessage|string ...$message): void
     {
-        $query->whereIn('external_id', collect($message)->map(function(MailboxMessage|string $message) {
-            return $message instanceof MailboxMessage ? $message->external_id : $message;
-        }));
+        $query->whereIn('external_id', collect($message)->map(fn (MailboxMessage|string $message): string => $message instanceof MailboxMessage ? $message->external_id : $message));
     }
 
     /**
      * Scope the query to the given converstation ids.
      *
-     * @param Builder $query
-     * @param MailboxMessage|string ...$message
-     * @return void
+     * @param  Builder<MailboxMessage>  $query
      */
-    public function scopeConversation(Builder $query, MailboxMessage|string ...$message): void
+    protected function scopeConversation(Builder $query, MailboxMessage|string ...$message): void
     {
-        $query->whereIn('conversation_id', collect($message)->map(function(MailboxMessage|string $message) {
-            return $message instanceof MailboxMessage ? $message->conversation_id : $message;
-        }));
+        $query->whereIn('conversation_id', collect($message)->map(fn (MailboxMessage|string $message): string => $message instanceof MailboxMessage ? (string) $message->conversation_id : $message));
     }
 
     /**
      * Scope the query to the given message ids.
      *
-     * @param Builder $query
-     * @param MailboxMessage|string|int ...$message
-     * @return void
+     * @param  Builder<MailboxMessage>  $query
      */
-    public function scopeMessage(Builder $query, MailboxMessage|string|int ...$message): void
+    protected function scopeMessage(Builder $query, MailboxMessage|string|int ...$message): void
     {
-        $query->whereIn('id', collect($message)->map(function(MailboxMessage|string $message) {
-            return $message instanceof MailboxMessage ? $message->getKey() : $message;
-        }));
+        $query->whereIn('id', collect($message)->map(fn (MailboxMessage|string|int $message): mixed => $message instanceof MailboxMessage ? $message->getKey() : $message));
     }
 
     /**
      * Get the attachment relative storage path.
-     *
-     *
-     * @param string|null $filename
-     * @return string
      */
     public function attachmentRelativePath(?string $filename = null): string
     {
         return rtrim(sprintf('%s/%s/%s', $this->mailbox->email, $this->hash, $filename), '/');
     }
- 
+
     /**
      * Get the channels that model events should broadcast on.
      *
-     * @return array<int, \Illuminate\Broadcasting\Channel|\Illuminate\Database\Eloquent\Model>
+     * @return array<int, Channel|Model>
      */
     public function broadcastOn(string $event): array
     {
-        return [$this, $this->folder, $this->mailbox];
+        return array_values(array_filter([$this, $this->folder, $this->mailbox]));
     }
 
     /**
      * Get the indexable data array for the model.
      *
-     * @return array
+     * @return array<string, mixed>
      */
     public function toSearchableArray(): array
     {
         return [
             'from' => $this->from,
-            'subject' => $this->subject
+            'subject' => $this->subject,
         ];
     }
 
     /**
      * Create a new factory.
-     *
-     * @return MailboxMessageFactory
      */
     protected static function newFactory(): MailboxMessageFactory
     {
         return MailboxMessageFactory::new();
     }
-
 }

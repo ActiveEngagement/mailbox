@@ -7,18 +7,19 @@ use Microsoft\Graph\Generated\Models\DateTimeTimeZone;
 use Microsoft\Graph\Generated\Models\FollowupFlag as BaseFollowupFlag;
 use Microsoft\Graph\Generated\Models\FollowupFlagStatus as BaseFollowupFlagStatus;
 
-function createFlag(): BaseFollowupFlag {
+function createFlag(): BaseFollowupFlag
+{
     $flagStatus = new BaseFollowupFlagStatus(BaseFollowupFlagStatus::FLAGGED);
 
-    $flagStartDate = new DateTimeTimeZone();
+    $flagStartDate = new DateTimeTimeZone;
     $flagStartDate->setDateTime((string) now());
     $flagStartDate->setTimeZone('UTC');
 
-    $flagDueDate = new DateTimeTimeZone();
-    $flagDueDate->setDateTime((string) now()->addDay(1));
+    $flagDueDate = new DateTimeTimeZone;
+    $flagDueDate->setDateTime((string) now()->addDay());
     $flagDueDate->setTimeZone('UTC');
 
-    $flag = new BaseFollowupFlag();
+    $flag = new BaseFollowupFlag;
     $flag->setFlagStatus($flagStatus);
     $flag->setStartDateTime($flagStartDate);
     $flag->setDueDateTime($flagDueDate);
@@ -26,27 +27,28 @@ function createFlag(): BaseFollowupFlag {
     return $flag;
 }
 
-function createCompletedFlag(): BaseFollowupFlag {
+function createCompletedFlag(): BaseFollowupFlag
+{
     $flagStatus = new BaseFollowupFlagStatus(BaseFollowupFlagStatus::COMPLETE);
 
-    $flagCompletedDate = new DateTimeTimeZone();
+    $flagCompletedDate = new DateTimeTimeZone;
     $flagCompletedDate->setDateTime((string) now());
     $flagCompletedDate->setTimeZone('UTC');
 
-    $flag = new BaseFollowupFlag();
+    $flag = new BaseFollowupFlag;
     $flag->setFlagStatus($flagStatus);
     $flag->setCompletedDateTime($flagCompletedDate);
 
     return $flag;
 }
 
-it('casts from accepted types correctly', function() {
+it('casts from accepted types correctly', function (): void {
     $message = MailboxMessage::factory()->make();
 
     expect($message->flag)->toBeInstanceOf(FollowupFlag::class);
 
     $message->flag = FollowupFlag::from([
-        'status' => FollowupFlagStatus::NotFlagged
+        'status' => FollowupFlagStatus::NotFlagged,
     ]);
 
     expect($message->flag->status)->toBe(FollowupFlagStatus::NotFlagged);
@@ -54,7 +56,6 @@ it('casts from accepted types correctly', function() {
     expect($message->flag->dueDateTime)->toBeNull();
     expect($message->flag->completedDateTime)->toBeNull();
 
-    /** @var FollowupFlag */
     $message->flag = null;
 
     expect($message->flag->status)->toBe(FollowupFlagStatus::NotFlagged);
@@ -62,7 +63,6 @@ it('casts from accepted types correctly', function() {
     expect($message->flag->dueDateTime)->toBeNull();
     expect($message->flag->completedDateTime)->toBeNull();
 
-    /** @var FollowupFlag */
     $message->flag = createFlag();
 
     expect($message->flag->status)->toBe(FollowupFlagStatus::Flagged);
@@ -70,7 +70,6 @@ it('casts from accepted types correctly', function() {
     expect($message->flag->dueDateTime)->not->toBeNull();
     expect($message->flag->completedDateTime)->toBeNull();
 
-    /** @var FollowupFlag */
     $message->flag = createCompletedFlag();
 
     expect($message->flag->status)->toBe(FollowupFlagStatus::Complete);

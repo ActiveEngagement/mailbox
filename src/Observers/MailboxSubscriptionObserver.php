@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Actengage\Mailbox\Observers;
 
 use Actengage\Mailbox\Facades\Subscriptions;
@@ -28,7 +30,7 @@ class MailboxSubscriptionObserver
      */
     public function deleted(MailboxSubscription $subscription): void
     {
-        Subscriptions::delete($subscription->external_id);
+        Subscriptions::delete($subscription);
     }
 
     /**

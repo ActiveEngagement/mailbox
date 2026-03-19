@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Actengage\Mailbox\Services;
 
 use Actengage\Mailbox\Facades\Client;
@@ -7,7 +9,6 @@ use Actengage\Mailbox\Models\Mailbox;
 use Actengage\Mailbox\Models\MailboxSubscription;
 use Http\Promise\Promise;
 use Illuminate\Support\Uri;
-use Microsoft\Graph\Generated\Models\ODataErrors\ODataError;
 use Microsoft\Graph\Generated\Models\Subscription;
 
 class SubscriptionService
@@ -20,9 +21,6 @@ class SubscriptionService
 
     /**
      * Create all the subscriptions for a given mailbox.
-     *
-     * @param Mailbox $mailbox
-     * @return void
      */
     public function subscribe(Mailbox $mailbox): void
     {
@@ -33,23 +31,22 @@ class SubscriptionService
     /**
      * Subscripe to created, updated, deleted message changes.
      *
-     * @param Mailbox $mailbox
      * @return Promise<MailboxSubscription|null>
      */
     protected function subscribeToFolders(Mailbox $mailbox): Promise
     {
-        $subscription = new Subscription();
+        $subscription = new Subscription;
         $subscription->setChangeType('updated,deleted');
         $subscription->setNotificationUrl($this->notificationUrl($mailbox, 'mailbox.webhooks.folders'));
-        $subscription->setResource("/users/$mailbox->email/mailFolders");
+        $subscription->setResource(sprintf('/users/%s/mailFolders', $mailbox->email));
         $subscription->setExpirationDateTime(now()->addDays(1));
-        
+
         return $this->service->client()
             ->subscriptions()
             ->post($subscription)
-            ->then(function($subscription) use ($mailbox) {
-                if(!$subscription) {
-                    return;
+            ->then(function (mixed $subscription) use ($mailbox): ?MailboxSubscription {
+                if (! $subscription instanceof Subscription) {
+                    return null;
                 }
 
                 return $this->createMailboxSubscription($mailbox, $subscription);
@@ -59,23 +56,22 @@ class SubscriptionService
     /**
      * Subscripe to created, updated, deleted message changes.
      *
-     * @param Mailbox $mailbox
      * @return Promise<MailboxSubscription|null>
      */
     protected function subscribeToMessages(Mailbox $mailbox): Promise
     {
-        $subscription = new Subscription();
+        $subscription = new Subscription;
         $subscription->setChangeType('created,updated,deleted');
         $subscription->setNotificationUrl($this->notificationUrl($mailbox, 'mailbox.webhooks.messages'));
-        $subscription->setResource("/users/$mailbox->email/messages");
+        $subscription->setResource(sprintf('/users/%s/messages', $mailbox->email));
         $subscription->setExpirationDateTime(now()->addDays(1));
-        
+
         return $this->service->client()
             ->subscriptions()
             ->post($subscription)
-            ->then(function($subscription) use ($mailbox) {
-                if(!$subscription) {
-                    return;
+            ->then(function (mixed $subscription) use ($mailbox): ?MailboxSubscription {
+                if (! $subscription instanceof Subscription) {
+                    return null;
                 }
 
                 return $this->createMailboxSubscription($mailbox, $subscription);
@@ -84,10 +80,6 @@ class SubscriptionService
 
     /**
      * Create the MailboxSubscription model from the given Subscription.
-     *
-     * @param Mailbox $mailbox
-     * @param Subscription $subscription
-     * @return MailboxSubscription
      */
     protected function createMailboxSubscription(Mailbox $mailbox, Subscription $subscription): MailboxSubscription
     {
@@ -102,30 +94,29 @@ class SubscriptionService
 
     /**
      * Get the webhook notifcation url.
-     *
-     * @param Mailbox $mailbox
-     * @param string $route
-     * @return Uri
      */
     protected function notificationUrl(Mailbox $mailbox, string $route): string
     {
-        extract(parse_url(Client::config('webhook_host', config('app.url'))));
+        $appUrl = config()->string('app.url');
+        $webhookHost = Client::config('webhook_host', $appUrl);
 
-        return Uri::route($route, ['mailbox' => $mailbox], false)
-            ->withHost(isset($host) ? $host : 'localhost')
-            ->withScheme(isset($scheme) ? $scheme : 'https');
+        /** @var array{host?: string, scheme?: string} $parsed */
+        $parsed = parse_url(is_string($webhookHost) ? $webhookHost : $appUrl);
+
+        return (string) Uri::route($route, ['mailbox' => $mailbox], false)
+            ->withHost($parsed['host'] ?? 'localhost')
+            ->withScheme($parsed['scheme'] ?? 'https');
     }
 
     /**
      * Delete the subscription.
      *
-     * @param MailboxSubscription|string $subscription
-     * @return Promise<null>
+     * @return Promise<void|null>
      */
     public function delete(MailboxSubscription|string $subscription): Promise
     {
         $id = $subscription instanceof MailboxSubscription
-            ? $subscription->getKey()
+            ? (string) $subscription->external_id
             : $subscription;
 
         return $this->service->client()

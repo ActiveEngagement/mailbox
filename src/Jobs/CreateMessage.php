@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Actengage\Mailbox\Jobs;
 
 use Actengage\Mailbox\Facades\Attachments;
@@ -31,7 +33,11 @@ class CreateMessage implements ShouldQueue
     {
         Client::connect($this->mailbox->connection);
 
-        Messages::find($this->mailbox->email, $this->id)->then(function(Message $message) {
+        Messages::find($this->mailbox->email, $this->id)->then(function (?Message $message): void {
+            if (! $message instanceof Message) {
+                return;
+            }
+
             $model = Messages::save($this->mailbox, $message);
 
             Attachments::processUrlsAsAttachments($model);

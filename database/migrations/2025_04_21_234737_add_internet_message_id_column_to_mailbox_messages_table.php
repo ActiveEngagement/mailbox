@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('mailbox_messages', function (Blueprint $table) {
+        Schema::table('mailbox_messages', function (Blueprint $table): void {
             $table->string('internet_message_id')->after('conversation_index')->nullable();
             $table->string('in_reply_to')->after('internet_message_id')->nullable();
             $table->text('references')->after('in_reply_to')->nullable();
@@ -23,7 +23,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('mailbox_messages', function (Blueprint $table) {
+        Schema::table('mailbox_messages', function (Blueprint $table): void {
             $table->dropColumn('internet_message_id');
             $table->dropColumn('in_reply_to');
             $table->dropColumn('references');

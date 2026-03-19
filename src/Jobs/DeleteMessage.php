@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Actengage\Mailbox\Jobs;
 
 use Actengage\Mailbox\Models\Mailbox;

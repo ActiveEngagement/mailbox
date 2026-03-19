@@ -1,24 +1,39 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Actengage\Mailbox\Facades;
 
+use Actengage\Mailbox\Data\EmailAddress;
+use Actengage\Mailbox\Models\MailboxMessage;
+use Actengage\Mailbox\Models\MailboxMessageAttachment;
+use Actengage\Mailbox\Services\ModelService;
+use DateTime;
 use Illuminate\Support\Facades\Facade;
+use Microsoft\Graph\Generated\Models\Attachment;
+use Microsoft\Graph\Generated\Models\DateTimeTimeZone;
+use Microsoft\Graph\Generated\Models\FollowupFlag;
+use Microsoft\Graph\Generated\Models\FollowupFlagStatus;
+use Microsoft\Graph\Generated\Models\Importance;
+use Microsoft\Graph\Generated\Models\Message;
+use Microsoft\Graph\Generated\Models\Recipient;
 
 /**
- * @see \Actengage\Mailbox\Services\ModelService
- * @method static \Microsoft\Graph\Generated\Models\Message makeMessageModel(\Actengage\Mailbox\Models\MailboxMessage $message)
- * @method static \Microsoft\Graph\Generated\Models\Message makeDraftMessageModel(\Actengage\Mailbox\Models\MailboxMessage $message)
- * @method static \Microsoft\Graph\Generated\Models\Recipient makeRecipientModel(\Actengage\Mailbox\Data\EmailAddress $email)
- * @method static \Microsoft\Graph\Generated\Models\EmailAddress makeEmailAddressModel(\Actengage\Mailbox\Data\EmailAddress $email)
- * @method static \Microsoft\Graph\Generated\Models\Attachment makeAttachmentModel(\Actengage\Mailbox\Models\MailboxMessageAttachment $attachment)
- * @method static \Microsoft\Graph\Generated\Models\FollowupFlag makeFollowupFlagModel(\Actengage\Mailbox\Data\FollowupFlag $flag)
- * @method static \Microsoft\Graph\Generated\Models\FollowupFlagStatus makeFollowupFlagStatusModel(\Actengage\Mailbox\Enums\FollowupFlagStatus $status)
- * @method static \Microsoft\Graph\Generated\Models\Importance makeImportanceModel(\Actengage\Mailbox\Enums\Importance $importance)
- * @method static \Microsoft\Graph\Generated\Models\DateTimeTimeZone makeDateTimeTimeZoneModel(\DateTime $date)
+ * @see ModelService
+ *
+ * @method static Message makeMessageModel(MailboxMessage $message)
+ * @method static Message makeDraftMessageModel(MailboxMessage $message)
+ * @method static Recipient|null makeRecipientModel(?EmailAddress $email)
+ * @method static \Microsoft\Graph\Generated\Models\EmailAddress|null makeEmailAddressModel(?EmailAddress $email)
+ * @method static Attachment|null makeAttachmentModel(?MailboxMessageAttachment $attachment)
+ * @method static FollowupFlag|null makeFollowupFlagModel(?\Actengage\Mailbox\Data\FollowupFlag $flag)
+ * @method static FollowupFlagStatus|null makeFollowupFlagStatusModel(?\Actengage\Mailbox\Enums\FollowupFlagStatus $status)
+ * @method static Importance|null makeImportanceModel(?\Actengage\Mailbox\Enums\Importance $importance)
+ * @method static DateTimeTimeZone|null makeDateTimeTimeZoneModel(?DateTime $date)
  */
 class Models extends Facade
 {
-    protected static function getFacadeAccessor()
+    protected static function getFacadeAccessor(): string
     {
         return 'mailbox.models';
     }

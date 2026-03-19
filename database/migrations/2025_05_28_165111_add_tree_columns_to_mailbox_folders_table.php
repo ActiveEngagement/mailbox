@@ -12,7 +12,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('mailbox_folders', function (Blueprint $table) {
+        Schema::table('mailbox_folders', function (Blueprint $table): void {
             $table->unsignedInteger('_lft')->default(0)->after('parent_id');
             $table->unsignedInteger('_rgt')->default(0)->after('_lft');
         });
@@ -25,7 +25,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('mailbox_folders', function (Blueprint $table) {
+        Schema::table('mailbox_folders', function (Blueprint $table): void {
             $table->dropColumn('_lft');
             $table->dropColumn('_rgt');
         });

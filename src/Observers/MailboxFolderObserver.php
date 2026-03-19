@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Actengage\Mailbox\Observers;
 
 use Actengage\Mailbox\Models\MailboxFolder;
@@ -49,15 +51,12 @@ class MailboxFolderObserver
 
     /**
      * Bust the cache folder cache.
-     *
-     * @param MailboxFolder $mailboxFolder
-     * @return void
      */
     protected function bustCache(MailboxFolder $mailboxFolder): void
     {
-        Cache::forget("mailbox.{$mailboxFolder->mailbox?->id}.folders.archive");
-        Cache::forget("mailbox.{$mailboxFolder->mailbox?->id}.folders.drafts");
-        Cache::forget("mailbox.{$mailboxFolder->mailbox?->id}.folders.sentItems");
-        Cache::forget("mailbox.{$mailboxFolder->mailbox?->id}.folders.deletedItems");
+        Cache::forget(sprintf('mailbox.%s.folders.archive', $mailboxFolder->mailbox?->id));
+        Cache::forget(sprintf('mailbox.%s.folders.drafts', $mailboxFolder->mailbox?->id));
+        Cache::forget(sprintf('mailbox.%s.folders.sentItems', $mailboxFolder->mailbox?->id));
+        Cache::forget(sprintf('mailbox.%s.folders.deletedItems', $mailboxFolder->mailbox?->id));
     }
 }

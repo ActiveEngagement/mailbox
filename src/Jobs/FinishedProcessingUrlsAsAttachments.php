@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Actengage\Mailbox\Jobs;
 
 use Actengage\Mailbox\Events\ProcessedUrlsAsAttachments;
@@ -19,7 +21,6 @@ class FinishedProcessingUrlsAsAttachments implements ShouldQueue
     ) {
         //
     }
-
 
     /**
      * Execute the job.

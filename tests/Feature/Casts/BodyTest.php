@@ -2,7 +2,7 @@
 
 use Actengage\Mailbox\Models\MailboxMessage;
 
-it('casts from accepted types correctly', function() {
+it('casts from accepted types correctly', function (): void {
     $message = MailboxMessage::factory()->make();
 
     expect($message->body)->toBeString();
@@ -10,7 +10,7 @@ it('casts from accepted types correctly', function() {
     $message->body = fake()->randomHtml();
 
     expect($message->body)->toBeString();
-    
+
     $message->body = null;
 
     expect($message->body)->toBeNull();

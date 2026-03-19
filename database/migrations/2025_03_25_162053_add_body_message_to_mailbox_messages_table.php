@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('mailbox_messages', function (Blueprint $table) {
+        Schema::table('mailbox_messages', function (Blueprint $table): void {
             $table->mediumText('body_message')->after('body_preview')->nullable();
         });
     }
@@ -21,7 +21,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('mailbox_messages', function (Blueprint $table) {
+        Schema::table('mailbox_messages', function (Blueprint $table): void {
             $table->dropColumn('body_message');
         });
     }

@@ -1,11 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Actengage\Mailbox\Console;
 
 use Actengage\Mailbox\Facades\Client;
 use Actengage\Mailbox\Facades\Subscriptions;
 use Actengage\Mailbox\Models\Mailbox;
 use Illuminate\Console\Command;
+use Override;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Input\InputOption;
 
@@ -17,7 +20,7 @@ class RenewSubscriptions extends Command
      *
      * @var string
      */
-    protected $command = 'mailbox:resubscribe';
+    protected $name = 'mailbox:resubscribe';
 
     /**
      * The console command description.
@@ -31,30 +34,33 @@ class RenewSubscriptions extends Command
      */
     public function handle(): int
     {
-        $mailboxes = $this->option('email')
-            ? Mailbox::email($this->option('email'))->get()
+        /** @var string|null $email */
+        $email = $this->option('email');
+
+        $mailboxes = $email
+            ? Mailbox::query()->email($email)->get()
             : Mailbox::all();
 
-        foreach($mailboxes as $mailbox) {
+        foreach ($mailboxes as $mailbox) {
             $hasSubscriptions = $mailbox->subscriptions()
                 ->expiresAt(now()->addHour())
                 ->exists();
-                
-            if(!$hasSubscriptions) {
-                $this->warn("$mailbox->email has no subscriptions to renew!");
+
+            if (! $hasSubscriptions) {
+                $this->warn($mailbox->email.' has no subscriptions to renew!');
 
                 continue;
             }
-            
+
             $subscriptions = $mailbox->subscriptions;
 
             Client::connect($mailbox->connection);
 
             Subscriptions::subscribe($mailbox);
-    
+
             $subscriptions->each->delete();
 
-            $this->info("The subscriptions $mailbox->email have been resubscribed!");
+            $this->info(sprintf('The subscriptions %s have been resubscribed!', $mailbox->email));
         }
 
         return 0;
@@ -63,8 +69,9 @@ class RenewSubscriptions extends Command
     /**
      * Get the command arguments.
      *
-     * @return array
+     * @return array<int, array<int, mixed>>
      */
+    #[Override]
     protected function getOptions(): array
     {
         return [
