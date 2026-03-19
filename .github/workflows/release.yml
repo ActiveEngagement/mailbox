@@ -41,6 +41,7 @@ jobs:
           version: pnpm changeset version
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          HUSKY: 0
 
       - name: Check if Version Packages PR was merged
         id: check
