@@ -2,7 +2,7 @@
 
 use Actengage\Mailbox\Data\EmailAddress;
 
-it('can be created from a string', function() {
+it('can be created from a string', function (): void {
     $address = EmailAddress::fromString('test@test.com');
 
     expect($address->email)->toBe('test@test.com');

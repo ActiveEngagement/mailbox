@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Actengage\Mailbox\Http\Middleware;
 
 use Closure;
@@ -11,14 +13,14 @@ class HandleValidationToken
     /**
      * Handle an incoming request.
      *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
+     * @param  Closure(Request):Response  $next
      */
     public function handle(Request $request, Closure $next): Response
     {
         if ($request->has('validationToken')) {
-            return response($request->input('validationToken'), 200)->header('Content-Type', 'text/plain');
+            return response($request->string('validationToken')->toString(), 200)->header('Content-Type', 'text/plain');
         }
-    
+
         return $next($request);
     }
 }

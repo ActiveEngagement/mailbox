@@ -11,7 +11,7 @@ Route::prefix('mailbox/{mailbox}/webhooks')
         SubstituteBindings::class,
         HandleValidationToken::class,
     ])
-    ->group(function() {        
+    ->group(function () {
         Route::post('folders', FolderWebhookController::class)->name('mailbox.webhooks.folders');
         Route::post('messages', MessageWebhookController::class)->name('mailbox.webhooks.messages');
     });

@@ -1,0 +1,64 @@
+name: Release
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+
+concurrency: ${{ github.workflow }}-${{ github.ref }}
+
+jobs:
+  release:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Create Release Pull Request
+        id: changesets
+        uses: changesets/action@v1
+        with:
+          title: "Version Packages"
+          commit: "chore: version packages"
+          version: pnpm changeset version
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check if Version Packages PR was merged
+        id: check
+        run: |
+          if [ "${{ steps.changesets.outputs.hasChangesets }}" = "false" ]; then
+            VERSION=$(node -p "require('./package.json').version")
+            if ! git ls-remote --tags origin "refs/tags/v${VERSION}" | grep -q .; then
+              echo "should_release=true" >> "$GITHUB_OUTPUT"
+              echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+            fi
+          fi
+
+      - name: Create git tag and GitHub Release
+        if: steps.check.outputs.should_release == 'true'
+        run: |
+          VERSION="${{ steps.check.outputs.version }}"
+          git tag "v${VERSION}"
+          git push origin "v${VERSION}"
+          gh release create "v${VERSION}" --generate-notes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

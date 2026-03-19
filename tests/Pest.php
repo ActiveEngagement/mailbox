@@ -10,12 +10,13 @@
 | need to change it using the "pest()" function to bind a different classes or traits.
 |
 */
-
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Microsoft\Graph\Generated\Models\EmailAddress;
 use Microsoft\Graph\Generated\Models\Recipient;
+use Tests\TestCase;
 
-pest()->extend(Tests\TestCase::class)
-    ->use(Illuminate\Foundation\Testing\RefreshDatabase::class)
+pest()->extend(TestCase::class)
+    ->use(RefreshDatabase::class)
     ->in(__DIR__);
 
 /*
@@ -29,9 +30,7 @@ pest()->extend(Tests\TestCase::class)
 |
 */
 
-expect()->extend('toBeOne', function () {
-    return $this->toBe(1);
-});
+expect()->extend('toBeOne', fn () => $this->toBe(1));
 
 /*
 |--------------------------------------------------------------------------
@@ -44,12 +43,13 @@ expect()->extend('toBeOne', function () {
 |
 */
 
-function createRecipient(): Recipient {
-    $email = new EmailAddress();
+function createRecipient(): Recipient
+{
+    $email = new EmailAddress;
     $email->setAddress('test@test.com');
     $email->setName('Test Test');
 
-    $recipient = new Recipient();
+    $recipient = new Recipient;
     $recipient->setEmailAddress($email);
 
     return $recipient;

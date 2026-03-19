@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Actengage\Mailbox\Services;
 
 use Actengage\Mailbox\Data\Conditional;
@@ -10,6 +12,7 @@ use Actengage\Mailbox\Facades\Models;
 use Actengage\Mailbox\Models\Mailbox;
 use Actengage\Mailbox\Models\MailboxFolder;
 use Actengage\Mailbox\Models\MailboxMessage;
+use Exception;
 use Http\Promise\Promise;
 use Illuminate\Support\Collection;
 use Microsoft\Graph\BatchRequestBuilder;
@@ -19,6 +22,7 @@ use Microsoft\Graph\Core\Requests\BatchResponseItem;
 use Microsoft\Graph\Core\Tasks\PageIterator;
 use Microsoft\Graph\Generated\Models\MailFolder;
 use Microsoft\Graph\Generated\Models\Message;
+use Microsoft\Graph\Generated\Models\MessageCollectionResponse;
 use Microsoft\Graph\Generated\Models\ODataErrors\ODataError;
 use Microsoft\Graph\Generated\Users\Item\Messages\Item\CreateForward\CreateForwardPostRequestBody;
 use Microsoft\Graph\Generated\Users\Item\Messages\Item\CreateReply\CreateReplyPostRequestBody;
@@ -26,8 +30,10 @@ use Microsoft\Graph\Generated\Users\Item\Messages\Item\CreateReplyAll\CreateRepl
 use Microsoft\Graph\Generated\Users\Item\Messages\Item\MessageItemRequestBuilderGetQueryParameters;
 use Microsoft\Graph\Generated\Users\Item\Messages\Item\MessageItemRequestBuilderGetRequestConfiguration;
 use Microsoft\Graph\Generated\Users\Item\Messages\Item\Move\MovePostRequestBody;
-use Microsoft\Graph\Generated\Users\Item\Messages\MessagesRequestBuilderGetRequestConfiguration;
 use Microsoft\Graph\Generated\Users\Item\Messages\MessagesRequestBuilderGetQueryParameters;
+use Microsoft\Graph\Generated\Users\Item\Messages\MessagesRequestBuilderGetRequestConfiguration;
+use Microsoft\Kiota\Abstractions\RequestInformation;
+use Psr\Http\Message\StreamInterface;
 
 class MessageService
 {
@@ -40,9 +46,7 @@ class MessageService
     /**
      * Find a message by the given user and message id.
      *
-     * @param string $userId
-     * @param string $messageId
-     * @return Promise<Message>
+     * @return Promise<Message|null>
      */
     public function find(string $userId, string $messageId): Promise
     {
@@ -63,24 +67,22 @@ class MessageService
      * not return anything, since the amount of memory returned could exceed
      * what is available.
      *
-     * @param string $userId
-     * @param callable(Message): void $iterator
-     * @param Conditional|Filter|string|null $filter
-     * @return void
-     * @throws \Exception
+     * @param  callable(Message): void  $iterator
+     *
+     * @throws Exception
      */
     public function all(string $userId, callable $iterator, Conditional|Filter|string|null $filter = null): void
     {
+        /** @var MessageCollectionResponse $response */
         $response = $this->service->client()->users()
             ->byUserId($userId)
             ->messages()
             ->get(new MessagesRequestBuilderGetRequestConfiguration(
                 queryParameters: new MessagesRequestBuilderGetQueryParameters(
-                    top: 100,
-                    orderby: ['receivedDateTime asc'],
                     expand: ['attachments'],
                     filter: (string) $filter,
-                    select: [               
+                    orderby: ['receivedDateTime asc'],
+                    select: [
                         'id',
                         'subject',
                         'bodyPreview',
@@ -107,120 +109,119 @@ class MessageService
                         'inferenceClassification',
                         'webLink',
                         'parentFolderId',
-                        'categories'
-                    ]
+                        'categories',
+                    ],
+                    top: 100
                 )
             ))
             ->wait();
 
+        /** @var PageIterator<Message> $pageIterator */
         $pageIterator = new PageIterator(
             $response, $this->service->client()->getRequestAdapter()
         );
 
-        $pageIterator->iterate(function(Message $message) use ($iterator): bool {
-            $iterator($message);
+        $pageIterator->iterate(
+            /** @param array<mixed>|object $item */
+            function (array|object $item) use ($iterator): bool {
+                if ($item instanceof Message) {
+                    $iterator($item);
+                }
 
-            return true;
-        });
+                return true;
+            }
+        );
     }
 
     /**
      * Create a draft reply using the Graph API.
      *
-     * @return Promise<MailboxMessage>
+     * @return Promise<MailboxMessage|null>
      */
     public function create(Mailbox $mailbox): Promise
-    {        
-        $draft = new Message();
+    {
+        $draft = new Message;
         $draft->setIsDraft(true);
 
         return $this->service->client()->users()
             ->byUserId($mailbox->email)
             ->messages()
             ->post($draft)
-            ->then(function(Message $model) use ($mailbox): MailboxMessage {
-                return $this->save($mailbox, $model);
-            });
+            ->then(fn (?Message $model): ?MailboxMessage => $model instanceof Message ? $this->save($mailbox, $model) : null);
     }
-    
+
     /**
      * Create a draft reply using the Graph API.
      *
-     * @return Promise<MailboxMessage>
+     * @return Promise<MailboxMessage|null>
      */
     public function createReply(MailboxMessage $message): Promise
-    {        
-        $draft = new Message();
+    {
+        $draft = new Message;
         $draft->setSubject($message->subject);
         $draft->setIsDraft(true);
 
-        $request = new CreateReplyPostRequestBody();
+        $request = new CreateReplyPostRequestBody;
         $request->setMessage($draft);
 
         return $this->service->client()->users()
             ->byUserId($message->mailbox->email)
             ->messages()
-            ->byMessageId($message->external_id)
+            ->byMessageId((string) $message->external_id)
             ->createReply()
             ->post($request)
-            ->then(function(Message $model) use ($message): MailboxMessage {
-                return $this->save($message->mailbox, $model);
-            });
+            ->then(fn (?Message $model): ?MailboxMessage => $model instanceof Message ? $this->save($message->mailbox, $model) : null);
     }
-    
+
     /**
      * Create a draft reply all using the Graph API.
      *
-     * @return Promise<MailboxMessage>
+     * @return Promise<MailboxMessage|null>
      */
     public function createReplyAll(MailboxMessage $message): Promise
-    {        
-        $draft = new Message();
+    {
+        $draft = new Message;
         $draft->setSubject($message->subject);
         $draft->setIsDraft(true);
-        
-        $request = new CreateReplyAllPostRequestBody();
+
+        $request = new CreateReplyAllPostRequestBody;
         $request->setMessage($draft);
-        
+
         return $this->service->client()->users()
             ->byUserId($message->mailbox->email)
             ->messages()
-            ->byMessageId($message->external_id)
+            ->byMessageId((string) $message->external_id)
             ->createReplyAll()
             ->post($request)
-            ->then(function(Message $model) use ($message): MailboxMessage {
-                return $this->save($message->mailbox, $model);
-            });
+            ->then(fn (?Message $model): ?MailboxMessage => $model instanceof Message ? $this->save($message->mailbox, $model) : null);
     }
+
     /**
      * Create a draft forward using the Graph API.
      *
-     * @return Promise<MailboxMessage>
+     * @return Promise<MailboxMessage|null>
      */
     public function createForward(MailboxMessage $message): Promise
-    {        
-        $draft = new Message();
+    {
+        $draft = new Message;
         $draft->setSubject($message->subject);
         $draft->setIsDraft(true);
 
-        $request = new CreateForwardPostRequestBody();
+        $request = new CreateForwardPostRequestBody;
         $request->setMessage($draft);
 
         return $this->service->client()->users()
             ->byUserId($message->mailbox->email)
             ->messages()
-            ->byMessageId($message->external_id)
+            ->byMessageId((string) $message->external_id)
             ->createForward()
             ->post($request)
-            ->then(function(Message $model) use ($message): MailboxMessage {
-                return $this->save($message->mailbox, $model);
-            });
+            ->then(fn (?Message $model): ?MailboxMessage => $model instanceof Message ? $this->save($message->mailbox, $model) : null);
     }
 
     /**
      * Patch the message using the Graph API.
      *
-     * @param MailboxMessage $message
      * @return Promise<Message|null>
      */
     public function patch(MailboxMessage $message): Promise
@@ -230,25 +231,24 @@ class MessageService
         return $this->service->client()->users()
             ->byUserId($message->mailbox->email)
             ->messages()
-            ->byMessageId($message->external_id)
+            ->byMessageId((string) $message->external_id)
             ->patch($model);
     }
 
     /**
      * Move the message using the Graph API.
      *
-     * @param MailboxMessage $message
      * @return Promise<Message|null>
      */
     public function move(MailboxMessage $message, MailboxFolder $folder): Promise
     {
-        $moveRequest = new MovePostRequestBody();
-        $moveRequest->setDestinationId($folder->external_id);
+        $moveRequest = new MovePostRequestBody;
+        $moveRequest->setDestinationId((string) $folder->external_id);
 
         return $this->service->client()->users()
             ->byUserId($message->mailbox->email)
             ->messages()
-            ->byMessageId($message->external_id)
+            ->byMessageId((string) $message->external_id)
             ->move()
             ->post($moveRequest);
     }
@@ -256,42 +256,36 @@ class MessageService
     /**
      * Delete the message using the Graph API.
      *
-     * @param MailboxMessage ...$message
-     * @return \Illuminate\Support\Collection<int, ODataError>>
+     * @return Collection<int, ODataError>
      */
     public function delete(MailboxMessage ...$message): Collection
     {
-        $requests = collect($message)->chunk(20)->map(function(Collection $chunk) {
-            return new BatchRequestContent(collect($chunk)->map(function(MailboxMessage $message) {
-                return $this->service->client()->users()
-                    ->byUserId($message->mailbox->email)
-                    ->messages()
-                    ->byMessageId($message->external_id)
-                    ->toDeleteRequestInformation();
-            })->all());
-        });
+        $requests = collect($message)->chunk(20)->map(fn (Collection $chunk): BatchRequestContent => new BatchRequestContent(collect($chunk)->map(fn (MailboxMessage $message): RequestInformation => $this->service->client()->users()
+            ->byUserId($message->mailbox->email)
+            ->messages()
+            ->byMessageId((string) $message->external_id)
+            ->toDeleteRequestInformation())->all()));
 
         $requestBuilder = new BatchRequestBuilder(
             $this->service->client()->getRequestAdapter()
         );
 
-        return $requests->map(function(BatchRequestContent $content) use ($requestBuilder) {
-            return $requestBuilder->postAsync($content)->then(function (BatchResponseContent $response) {
-                return collect($response->getResponses())->map(function (BatchResponseItem $item) use ($response) {
-                    if($item->getBody() === null) {
-                        return;
-                    }
+        /** @var Collection<int, ODataError> */
+        return $requests->map(fn (BatchRequestContent $content) => $requestBuilder->postAsync($content)->then(fn (?BatchResponseContent $response) => $response instanceof BatchResponseContent ? collect($response->getResponses())->map(function (BatchResponseItem $item) use ($response): ?ODataError {
+            $id = $item->getId();
 
-                    return $response->getResponseBody($item->getId(), ODataError::class);
-                })->filter();
-            })->wait();
-        })->flatten();
+            if ($id === null || ! $item->getBody() instanceof StreamInterface) {
+                return null;
+            }
+
+            /** @var ODataError|null */
+            return $response->getResponseBody($id, ODataError::class);
+        })->filter()->values() : collect())->wait())->flatten();
     }
 
     /**
      * Send the message.
      *
-     * @param MailboxMessage $message
      * @return Promise<void|null>
      */
     public function send(MailboxMessage $message): Promise
@@ -299,21 +293,19 @@ class MessageService
         return $this->service->client()->users()
             ->byUserId($message->mailbox->email)
             ->messages()
-            ->byMessageId($message->external_id)
+            ->byMessageId((string) $message->external_id)
             ->send()
             ->post();
-    } 
+    }
 
     /**
      * Get a specific internet message header from the given message.
-     * 
-     * @param \Microsoft\Graph\Generated\Models\Message $message
      */
     public function getInternetMessageHeader(string $key, Message $message): ?string
     {
-        if($headers = $message->getInternetMessageHeaders()) {
+        if ($headers = $message->getInternetMessageHeaders()) {
             foreach ($headers as $header) {
-                if (strtolower($header->getName()) === $key) {
+                if (strtolower((string) $header->getName()) === $key) {
                     return $header->getValue();
                 }
             }
@@ -324,15 +316,11 @@ class MessageService
 
     /**
      * Save the message to the database.
-     *
-     * @param Mailbox $mailbox
-     * @param Message $message
-     * @return MailboxMessage
      */
     public function save(Mailbox $mailbox, Message $message): MailboxMessage
     {
         $model = $mailbox->messages()->firstOrNew([
-            'external_id' => $message->getId()
+            'external_id' => $message->getId(),
         ]);
 
         $model->fill([
@@ -357,20 +345,25 @@ class MessageService
             'sent_at' => $message->getSentDateTime(),
         ]);
 
-        if($folder = MailboxFolder::externalId($message->getParentFolderId())->first()) {
-            $model->folder()->associate($folder);
-        }
-        else {
-            Folders::find($mailbox, $message->getParentFolderId())
-                ->then(function(MailFolder $folder) use ($model, $mailbox): void {
-                    $model->folder()->associate(Folders::save($mailbox, $folder));
-                });
+        if ($message->getParentFolderId()) {
+            $existingFolder = MailboxFolder::query()->externalId($message->getParentFolderId())->first();
+
+            if ($existingFolder instanceof MailboxFolder) {
+                $model->folder()->associate($existingFolder);
+            } else {
+                Folders::find($mailbox, $message->getParentFolderId())
+                    ->then(function (?MailFolder $folder) use ($model, $mailbox): void {
+                        if ($folder instanceof MailFolder) {
+                            $model->folder()->associate(Folders::save($mailbox, $folder));
+                        }
+                    });
+            }
         }
 
         $model->save();
 
-        if($message->getHasAttachments()) {
-            foreach(collect($message->getAttachments()) as $attachment) {
+        if ($message->getHasAttachments()) {
+            foreach ((array) $message->getAttachments() as $attachment) {
                 Attachments::createFromAttachment($model, $attachment);
             }
         }

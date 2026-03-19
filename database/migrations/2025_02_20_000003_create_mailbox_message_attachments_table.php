@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('mailbox_message_attachments', function (Blueprint $table) {
+        Schema::create('mailbox_message_attachments', function (Blueprint $table): void {
             $table->id();
             $table->integer('mailbox_id')->unsigned();
             $table->foreign('mailbox_id')->references('id')->on('mailboxes')->cascadeOnDelete()->cascadeOnUpdate();

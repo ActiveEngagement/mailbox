@@ -1,19 +1,28 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Actengage\Mailbox\Facades;
 
+use Actengage\Mailbox\Models\Mailbox;
+use Actengage\Mailbox\Models\MailboxFolder;
+use Actengage\Mailbox\Services\FolderService;
+use Http\Promise\Promise;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Facade;
+use Microsoft\Graph\Generated\Models\MailFolder;
 
 /**
- * @see \Actengage\Mailbox\Services\GraphServiceClient
- * @method static \Illuminate\Support\Collection<int,\Microsoft\Graph\Generated\Models\MailFolder> all(string $userId)
- * @method static \Illuminate\Support\Collection<int,\Microsoft\Graph\Generated\Models\MailFolder> tree(string $userId)
- * @method static \Http\Promise\Promise<\Microsoft\Graph\Generated\Models\MailFolder> find(string $userId, string $folderId)
- * @method static \Actengage\Mailbox\Models\MailboxFolder save(\Actengage\Mailbox\Models\Mailbox $mailbox, \Microsoft\Graph\Generated\Models\MailFolder $folder)
+ * @see FolderService
+ *
+ * @method static Collection<int, MailFolder> all(string $userId)
+ * @method static Collection<int, MailFolder> tree(string $userId)
+ * @method static Promise<MailFolder|null> find(Mailbox|string $mailbox, string $folderId)
+ * @method static MailboxFolder save(Mailbox $mailbox, MailFolder $folder)
  */
 class Folders extends Facade
 {
-    protected static function getFacadeAccessor()
+    protected static function getFacadeAccessor(): string
     {
         return 'mailbox.folders';
     }

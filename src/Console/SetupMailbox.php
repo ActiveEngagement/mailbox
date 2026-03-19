@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Actengage\Mailbox\Console;
 
 use Actengage\Mailbox\Data\Conditional;
@@ -14,8 +16,9 @@ use Actengage\Mailbox\Models\MailboxMessage;
 use Actengage\Mailbox\Models\MailboxSubscription;
 use Illuminate\Console\Command;
 use Illuminate\Contracts\Console\PromptsForMissingInput;
-use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Date;
 use Microsoft\Graph\Generated\Models\Message;
+use Override;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputOption;
@@ -28,7 +31,7 @@ class SetupMailbox extends Command implements PromptsForMissingInput
      *
      * @var string
      */
-    protected $command = 'mailbox:setup';
+    protected $name = 'mailbox:setup';
 
     /**
      * The console command description.
@@ -56,17 +59,21 @@ class SetupMailbox extends Command implements PromptsForMissingInput
 
         $progress->setMessage('Creating Messages');
         $progress->advance();
-        
-        if(!$this->option('skip')) {
+
+        if (! $this->option('skip')) {
+            /** @var string|null $after */
+            $after = $this->option('after');
+
+            $filter = $after
+                ? Filter::greaterThanOrEquals(
+                    field: 'receivedDateTime',
+                    value: Date::parse($after)
+                )
+                : null;
+
             $this->createMailboxMessages(
                 mailbox: $mailbox,
-                filter: when(
-                    condition: $this->option('after'),
-                    value: fn (): Filter => Filter::greaterThanOrEquals(
-                        field: 'receivedDateTime',
-                        value: Carbon::parse($this->option('after'))
-                    )
-                )
+                filter: $filter,
             );
         }
 
@@ -78,39 +85,36 @@ class SetupMailbox extends Command implements PromptsForMissingInput
         $progress->finish();
         $progress->clear();
 
-        $this->info("$mailbox->email was setup!");
+        $this->info($mailbox->email.' was setup!');
 
         return 0;
     }
 
     /**
      * Create the mailbox if it doesn't exist.
-     *
-     * @return Mailbox
      */
     protected function createMailbox(): Mailbox
     {
-        return Mailbox::withoutBroadcasting(function() {
-            return Mailbox::firstOrCreate([
-                'email' => $this->argument('email')
-            ], [
-                'connection' => Client::connection()
-            ]);
-        });
+        /** @var Mailbox */
+        return Mailbox::withoutBroadcasting(fn () => Mailbox::query()->firstOrCreate([
+            'email' => $this->argument('email'),
+        ], [
+            'connection' => Client::connection(),
+        ]));
     }
 
     /**
      * Create the mailbox folders if they don't exist.
-     *
-     * @param Mailbox $mailbox
-     * @return void
      */
     protected function createMailboxFolders(Mailbox $mailbox): void
     {
-        MailboxFolder::withoutBroadcasting(function() use ($mailbox): void {
-            $folders = Folders::all($this->argument('email'));
-    
-            foreach($folders as $folder) {
+        /** @var string $email */
+        $email = $this->argument('email');
+
+        MailboxFolder::withoutBroadcasting(function () use ($mailbox, $email): void {
+            $folders = Folders::all($email);
+
+            foreach ($folders as $folder) {
                 Folders::save($mailbox, $folder);
             }
         });
@@ -118,33 +122,29 @@ class SetupMailbox extends Command implements PromptsForMissingInput
 
     /**
      * Create the mailbox messages if they don't exist.
-     *
-     * @param Mailbox $mailbox
-     * @param Conditional|Filter|string|null $filter
-     * @return void
      */
     protected function createMailboxMessages(Mailbox $mailbox, Conditional|Filter|string|null $filter = null): void
     {
-        MailboxMessage::withoutBroadcasting(function() use ($mailbox, $filter): void {
+        /** @var string $email */
+        $email = $this->argument('email');
+
+        MailboxMessage::withoutBroadcasting(function () use ($mailbox, $email, $filter): void {
             Messages::all(
-                userId: $this->argument('email'),
-                filter: $filter,
-                iterator: function(Message $message) use ($mailbox): void {
+                userId: $email,
+                iterator: function (Message $message) use ($mailbox): void {
                     Messages::save($mailbox, $message);
                 },
+                filter: $filter,
             );
         });
     }
 
     /**
      * Create the mailbox subscriptions if they don't exist.
-     *
-     * @param Mailbox $mailbox
-     * @return void
      */
     protected function createMailboxSubscriptions(Mailbox $mailbox): void
     {
-        MailboxSubscription::withoutBroadcasting(function() use ($mailbox): void {
+        MailboxSubscription::withoutBroadcasting(function () use ($mailbox): void {
             $mailbox->subscriptions->each->delete();
 
             Subscriptions::subscribe($mailbox);
@@ -154,8 +154,9 @@ class SetupMailbox extends Command implements PromptsForMissingInput
     /**
      * Get the command arguments.
      *
-     * @return array
+     * @return array<int, array<int, mixed>>
      */
+    #[Override]
     protected function getArguments(): array
     {
         return [
@@ -166,8 +167,9 @@ class SetupMailbox extends Command implements PromptsForMissingInput
     /**
      * Get the command options.
      *
-     * @return array
+     * @return array<int, array<int, mixed>>
      */
+    #[Override]
     protected function getOptions(): array
     {
         return [

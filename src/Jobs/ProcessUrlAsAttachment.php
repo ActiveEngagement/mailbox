@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Actengage\Mailbox\Jobs;
 
 use Actengage\Mailbox\Facades\Attachments;
@@ -28,16 +30,16 @@ class ProcessUrlAsAttachment implements ShouldQueue
     {
         $response = Attachments::get($this->url);
 
-        if(!$response->header('Content-Disposition')) {
+        if (! $response->header('Content-Disposition')) {
             return;
         }
 
         $disposition = Attachments::contentDisposition($response);
 
-        if($disposition->getType() !== 'attachment') {
+        if ($disposition->getType() !== 'attachment') {
             return;
         }
-        
+
         Attachments::createFromResponse(
             $this->message, $response, $disposition
         );

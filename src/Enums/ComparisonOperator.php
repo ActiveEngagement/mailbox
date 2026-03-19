@@ -1,8 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Actengage\Mailbox\Enums;
 
-enum ComparisonOperator: string {
+enum ComparisonOperator: string
+{
     case Equals = 'eq';
     case NotEquals = 'ne';
     case GreaterThan = 'gt';

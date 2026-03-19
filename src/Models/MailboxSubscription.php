@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Actengage\Mailbox\Models;
 
 use Actengage\Mailbox\Events\MailboxSubscriptionCreated;
@@ -13,9 +15,23 @@ use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
+use Override;
 use Spatie\TypeScriptTransformer\Attributes\LiteralTypeScriptType;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
+/**
+ * @property int $id
+ * @property int $mailbox_id
+ * @property string $external_id
+ * @property string $resource
+ * @property string $change_type
+ * @property string $notification_url
+ * @property Carbon|null $expires_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property-read Mailbox|null $mailbox
+ */
 #[TypeScript]
 #[LiteralTypeScriptType([
     'id' => 'number',
@@ -37,23 +53,22 @@ class MailboxSubscription extends Model
     /**
      * The attributes that are mass assignable.
      *
-     * @var array<int, string>
+     * @var list<string>
      */
     protected $fillable = [
         'external_id',
         'resource',
         'change_type',
         'notification_url',
-        'expires_at'
+        'expires_at',
     ];
-
 
     /**
      * The event map for the model.
      *
      * Allows for object-based events for native Eloquent events.
      *
-     * @var array<string,class-string>
+     * @var array<string, class-string>
      */
     protected $dispatchesEvents = [
         'created' => MailboxSubscriptionCreated::class,
@@ -65,9 +80,10 @@ class MailboxSubscription extends Model
     /**
      * The attributes that are cast.
      *
-     * @return array
+     * @return array<string, string>
      */
-    public function casts(): array
+    #[Override]
+    protected function casts(): array
     {
         return [
             'expires_at' => 'datetime',
@@ -77,7 +93,7 @@ class MailboxSubscription extends Model
     /**
      * Get the parent mailbox.
      *
-     * @return BelongsTo<Mailbox>
+     * @return BelongsTo<Mailbox, $this>
      */
     public function mailbox(): BelongsTo
     {
@@ -87,11 +103,9 @@ class MailboxSubscription extends Model
     /**
      * Scope the query using the MailFolder instance.
      *
-     * @param Builder $query
-     * @param DateTime $expiresAt
-     * @return void
+     * @param  Builder<MailboxSubscription>  $query
      */
-    public function scopeExpiresAt(Builder $query, DateTime $expiresAt): void
+    protected function scopeExpiresAt(Builder $query, DateTime $expiresAt): void
     {
         $query->where('expires_at', '<=', $expiresAt);
     }

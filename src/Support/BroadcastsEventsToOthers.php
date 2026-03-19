@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Actengage\Mailbox\Support;
 
 use Illuminate\Database\Eloquent\BroadcastableModelEventOccurred;
@@ -14,8 +16,8 @@ trait BroadcastsEventsToOthers
      */
     protected function newBroadcastableEvent(string $event): BroadcastableModelEventOccurred
     {
-        return (new BroadcastableModelEventOccurred(
+        return new BroadcastableModelEventOccurred(
             $this, $event
-        ))->dontBroadcastToCurrentUser();
+        )->dontBroadcastToCurrentUser();
     }
 }

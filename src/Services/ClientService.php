@@ -1,38 +1,34 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Actengage\Mailbox\Services;
 
 use Illuminate\Support\Arr;
-use Microsoft\Kiota\Authentication\Oauth\ClientCredentialContext;
 use Microsoft\Graph\GraphServiceClient;
+use Microsoft\Kiota\Authentication\Oauth\ClientCredentialContext;
 
 class ClientService
 {
     /**
      * The client credential context.
-     *
-     * @var ClientCredentialContext
      */
     protected ClientCredentialContext $credentials;
 
     /**
      * The graph service client.
-     *
-     * @var GraphServiceClient
      */
     protected GraphServiceClient $client;
 
     /**
      * The name of the connection.
-     *
-     * @var string
      */
     protected string $connection;
 
     /**
      * The configuration for the given connection.
      *
-     * @var array
+     * @var array<string, string|null>
      */
     protected array $config = [
         'tenant_id' => null,
@@ -44,8 +40,6 @@ class ClientService
 
     /**
      * Create the client service.
-     *
-     * @param string|null $connection
      */
     public function __construct(?string $connection = null)
     {
@@ -54,8 +48,6 @@ class ClientService
 
     /**
      * Get the current ClientCredentialContext.
-     *
-     * @return ClientCredentialContext
      */
     public function credentials(): ClientCredentialContext
     {
@@ -64,8 +56,6 @@ class ClientService
 
     /**
      * Get the current GraphServiceClient.
-     *
-     * @return GraphServiceClient
      */
     public function client(): GraphServiceClient
     {
@@ -75,11 +65,12 @@ class ClientService
     /**
      * Get the config for the current connection.
      *
-     * @return array<string,string>|string|null
+     * @return array<string, string|null>|string|null
      */
     public function config(?string $key = null, ?string $default = null): array|string|null
     {
-        if($key) {
+        if ($key) {
+            /** @var string|null */
             return Arr::get($this->config, $key, $default);
         }
 
@@ -88,8 +79,6 @@ class ClientService
 
     /**
      * Get the name of the current connection.
-     *
-     * @return string
      */
     public function connection(): string
     {
@@ -98,18 +87,15 @@ class ClientService
 
     /**
      * Use the given connection.
-     *
-     * @param string|null $connection
-     * @return GraphServiceClient
      */
     public function connect(?string $connection = null): GraphServiceClient
     {
         $config = $this->withConfig($connection);
-        
+
         $this->credentials = new ClientCredentialContext(
-            $config['tenant_id'], $config['client_id'], $config['client_secret']
+            (string) $config['tenant_id'], (string) $config['client_id'], (string) $config['client_secret']
         );
-        
+
         $this->client = new GraphServiceClient($this->credentials);
 
         return $this->client;
@@ -118,16 +104,16 @@ class ClientService
     /**
      * Set and return the config from the name of the connection.
      *
-     * @param string|null $connection
-     * @return array
+     * @return array<string, string|null>
      */
     protected function withConfig(?string $connection = null): array
     {
-        $this->connection = $connection ?? config('mailbox.default');
-        
-        $credentials = config('mailbox.connections.' . (
-            $connection ?? config('mailbox.default')
-        ));
+        /** @var string $defaultConnection */
+        $defaultConnection = config('mailbox.default');
+        $this->connection = $connection ?? $defaultConnection;
+
+        /** @var array<string, string|null> $credentials */
+        $credentials = config('mailbox.connections.'.($connection ?? $defaultConnection));
 
         return $this->config = array_merge(
             $this->config, $credentials

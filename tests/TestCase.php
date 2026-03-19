@@ -1,10 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests;
 
 use Actengage\Mailbox\ServiceProvider;
-use Actengage\Mailbox\Services\FolderService;
-use Actengage\Mailbox\Services\MessageService;
 use Spatie\LaravelData\LaravelDataServiceProvider;
 
 class TestCase extends \Orchestra\Testbench\TestCase

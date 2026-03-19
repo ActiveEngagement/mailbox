@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Database\Factories;
 
 use Actengage\Mailbox\Models\Mailbox;
@@ -7,17 +9,10 @@ use Actengage\Mailbox\Models\MailboxFolder;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @template TModel of \Actengage\Mailbox\MailboxMessage
- *
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<TModel>
+ * @extends Factory<MailboxFolder>
  */
 class MailboxFolderFactory extends Factory
 {
-    /**
-     * The name of the factory's corresponding model.
-     *
-     * @var class-string<TModel>
-     */
     protected $model = MailboxFolder::class;
 
     /**

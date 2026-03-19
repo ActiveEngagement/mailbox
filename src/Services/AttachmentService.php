@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Actengage\Mailbox\Services;
 
 use Actengage\Mailbox\Jobs\FinishedProcessingUrlsAsAttachments;
@@ -15,7 +17,6 @@ use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Microsoft\Graph\Generated\Models\Attachment;
-use Pest\Support\Arr;
 
 class AttachmentService
 {
@@ -27,37 +28,37 @@ class AttachmentService
 
     /**
      * Perform a GET request for the given URL.
-     *
-     * @param string $url
-     * @return Response
      */
     public function get(string $url): Response
     {
-        return Http::get($url);       
+        return Http::get($url);
     }
 
     /**
      * Extract the URLs from the given message.
      *
-     * @param MailboxMessage $message
-     * @return array<int,string>
+     * @return array<int, string>
      */
     public function extractUrls(MailboxMessage $message): array
     {
-        $document = HTMLDocument::createFromString($message->body, LIBXML_HTML_NOIMPLIED);
+        $document = HTMLDocument::createFromString((string) $message->body, LIBXML_HTML_NOIMPLIED);
 
         $urls = [];
-        
-        foreach($document->querySelectorAll('a') as $node) {
-            if(!$href = $node->getAttribute('href')) {
+
+        foreach ($document->querySelectorAll('a') as $node) {
+            $href = $node->getAttribute('href');
+            if ($href === null) {
+                continue;
+            }
+            if ($href === '') {
                 continue;
             }
 
             $scheme = parse_url($href, PHP_URL_SCHEME);
 
-            if($href && in_array($scheme, ['http', 'https'])) {
+            if (is_string($scheme) && in_array($scheme, ['http', 'https'], true)) {
                 $urls[] = $href;
-            }            
+            }
         }
 
         return $urls;
@@ -65,74 +66,64 @@ class AttachmentService
 
     /**
      * Determines if the given message should process urls as attachments.
-     * 
-     * @param \Actengage\Mailbox\Models\MailboxMessage $message
-     * @return bool
      */
     public function shouldProcessUrlsAsAttachments(MailboxMessage $message): bool
     {
-        if(!$message->from) {
+        if (! $message->from) {
             return false;
         }
 
-        if(!$mailboxConfig = Arr::get(
-            config()->array('mailbox.mailboxes'),
-            $message->mailbox->email
-        )) {
-            return false;
-        };
+        $mailboxes = config()->array('mailbox.mailboxes');
 
+        /** @var array<string, mixed>|null $mailboxConfig */
+        $mailboxConfig = $mailboxes[$message->mailbox->email] ?? null;
+
+        if (! $mailboxConfig) {
+            return false;
+        }
+
+        /** @var array{enabled: bool, pattern: string|null} $config */
         $config = array_merge([
             'enabled' => false,
-            'pattern' => null
-        ], Arr::get($mailboxConfig, 'process_urls_as_attachments'));
+            'pattern' => null,
+        ], (array) data_get($mailboxConfig, 'process_urls_as_attachments'));
 
-        if(!$config['enabled']) {
+        if (! $config['enabled']) {
             return false;
         }
 
-        if(!$config['pattern']) {
+        if (! $config['pattern']) {
             return true;
         }
 
-        if(!preg_match($config['pattern'], $message->from->email)) {
-            return false;
-        }
-        
-        return true;
+        return (bool) preg_match($config['pattern'], (string) $message->from->email);
     }
 
     /**
-     * Dispatch the jobs to process the URLs as attachments. 
-     *
-     * @param MailboxMessage $message
-     * @return void
+     * Dispatch the jobs to process the URLs as attachments.
      */
     public function processUrlsAsAttachments(MailboxMessage $message): void
     {
-        if(!$this->shouldProcessUrlsAsAttachments($message)) {
+        if (! $this->shouldProcessUrlsAsAttachments($message)) {
             dispatch(new FinishedProcessingUrlsAsAttachments($message));
-            
+
             return;
         }
 
         /** @var Collection<int, ShouldQueue> */
         $jobs = collect($this->extractUrls($message))->map(
-            fn (string $url) => new ProcessUrlAsAttachment($message, $url)
+            fn (string $url): ProcessUrlAsAttachment => new ProcessUrlAsAttachment($message, $url)
         );
 
         $jobs->push(new FinishedProcessingUrlsAsAttachments($message));
 
-        Bus::chain($jobs)->catch(function() use ($message) {
+        Bus::chain($jobs)->catch(function () use ($message): void {
             dispatch(new FinishedProcessingUrlsAsAttachments($message));
         })->dispatch();
     }
 
     /**
      * Get the content disposition from the given response.
-     *
-     * @param Response $response
-     * @return ContentDisposition
      */
     public function contentDisposition(Response $response): ContentDisposition
     {
@@ -141,29 +132,30 @@ class AttachmentService
 
     /**
      * Create an attachment model from the given HTTP response.
-     *
-     * @param MailboxMessage $message
-     * @param Response $response
-     * @param ContentDisposition|null $disposition
-     * @return MailboxMessageAttachment
      */
     public function createFromResponse(MailboxMessage $message, Response $response, ?ContentDisposition $disposition = null): MailboxMessageAttachment
     {
-        $disposition = $disposition ?? ContentDisposition::parse(
+        $disposition ??= ContentDisposition::parse(
             $response->header('content-disposition')
         );
 
-        if($existing = $message->attachments()->name($disposition->getFilename())->first()) {
+        $filename = $disposition->getFilename() ?? '';
+        $existing = $message->attachments()->name($filename)->first();
+
+        if ($existing instanceof MailboxMessageAttachment) {
             return $existing;
         }
 
+        /** @var string $disk */
         $disk = $this->client->config('storage_disk', 'local');
-        $size = $response->getBody()->getSize();
+        $size = $response->toPsrResponse()->getBody()->getSize();
         $type = mime_content_type($response->resource());
-        $path = $message->attachmentRelativePath($disposition->getFilename());
+        $path = $message->attachmentRelativePath($filename);
 
+        /** @var string $visibility */
+        $visibility = $this->client->config('storage_visibility', 'private');
         Storage::disk($disk)->put($path, $response->toPsrResponse()->getBody(), [
-            'visibility' => $this->client->config('storage_visibility', 'private')
+            'visibility' => $visibility,
         ]);
 
         $model = $message->attachments()->make([
@@ -172,7 +164,7 @@ class AttachmentService
             'size' => $size,
             'content_type' => $type,
             'path' => $path,
-            'last_modified_at' => now()
+            'last_modified_at' => now(),
         ]);
 
         $model->mailbox()->associate($message->mailbox_id);
@@ -183,23 +175,27 @@ class AttachmentService
 
     /**
      * Create an attachment model from given Graph API model.
-     *
-     * @param MailboxMessage $message
-     * @param Attachment $attachment
-     * @return void
      */
-    public function createFromAttachment(MailboxMessage $message, Attachment $attachment)
+    public function createFromAttachment(MailboxMessage $message, Attachment $attachment): MailboxMessageAttachment
     {
-        if($existing = $message->attachments()->name($attachment->getName())->first()) {
+        $name = (string) $attachment->getName();
+        $existing = $message->attachments()->name($name)->first();
+
+        if ($existing instanceof MailboxMessageAttachment) {
             return $existing;
         }
 
+        /** @var string $disk */
         $disk = $this->client->config('storage_disk', 'local');
-        $contents = base64_decode($attachment->getBackingStore()->get('contentBytes'));
-        $path = $message->attachmentRelativePath($attachment->getName());
+        /** @var string $contentBytes */
+        $contentBytes = $attachment->getBackingStore()->get('contentBytes');
+        $contents = base64_decode($contentBytes);
+        $path = $message->attachmentRelativePath($name);
 
+        /** @var string $visibility */
+        $visibility = $this->client->config('storage_visibility', 'private');
         Storage::disk($disk)->put($path, $contents, [
-            'visibility' => $this->client->config('storage_visibility', 'private')
+            'visibility' => $visibility,
         ]);
 
         $model = $message->attachments()->make([
@@ -208,7 +204,7 @@ class AttachmentService
             'name' => $attachment->getName(),
             'size' => $attachment->getSize(),
             'content_type' => $attachment->getContentType(),
-            'last_modified_at' => $attachment->getLastModifiedDateTime()
+            'last_modified_at' => $attachment->getLastModifiedDateTime(),
         ]);
 
         $model->mailbox()->associate($message->mailbox);

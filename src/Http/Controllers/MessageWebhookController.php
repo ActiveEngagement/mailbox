@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Actengage\Mailbox\Http\Controllers;
 
 use Actengage\Mailbox\Jobs\CreateMessage;
@@ -17,16 +19,27 @@ class MessageWebhookController
      */
     public function __invoke(Request $request, Mailbox $mailbox): Response
     {
-        foreach($request->input('value') as $event) {
-            $job = match(Arr::get($event, 'changeType')) {
+        /** @var array<int, array<string, mixed>> $events */
+        $events = $request->input('value');
+
+        foreach ($events as $event) {
+            /** @var string $changeType */
+            $changeType = Arr::get($event, 'changeType');
+            /** @var string $resourceId */
+            $resourceId = Arr::get($event, 'resourceData.id');
+
+            $job = match ($changeType) {
                 'created' => CreateMessage::class,
                 'updated' => UpdateMessage::class,
                 'deleted' => DeleteMessage::class,
+                default => null,
             };
 
-            dispatch(new $job(
-                $mailbox, Arr::get($event, 'resourceData.id')
-            ));
+            if ($job === null) {
+                continue;
+            }
+
+            dispatch(new $job($mailbox, $resourceId));
         }
 
         return response('OK', 202);

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Actengage\Mailbox;
 
 use Actengage\Mailbox\Console\CreateSubscriptions;
@@ -14,20 +16,20 @@ use Actengage\Mailbox\Services\ModelService;
 use Actengage\Mailbox\Services\SubscriptionService;
 use Illuminate\Foundation\Console\AboutCommand;
 use Illuminate\Support\ServiceProvider as BaseServiceProvider;
+use Override;
 
 class ServiceProvider extends BaseServiceProvider
 {
     /**
      * Register any application services.
-     *
-     * @return void
      */
-    public function register()
+    #[Override]
+    public function register(): void
     {
         $this->mergeConfigFrom(
             __DIR__.'/../config/mailbox.php', 'mailbox'
         );
-        
+
         $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
 
         $this->loadRoutesFrom(__DIR__.'/../routes/webhooks.php');
@@ -42,19 +44,17 @@ class ServiceProvider extends BaseServiceProvider
 
     /**
      * Boot any application services.
-     *
-     * @return void
      */
-    public function boot()
+    public function boot(): void
     {
-        AboutCommand::add('Mailbox', fn () => ['Version' => 'v1.0.0']);
+        AboutCommand::add('Mailbox', fn (): array => ['Version' => 'v1.0.0']);
 
         $this->publishes([
             __DIR__.'/../config/mailbox.php' => config_path('mailbox.php'),
         ], 'mailbox-config');
 
         $this->publishesMigrations([
-            __DIR__.'/../database/migrations' => database_path('migrations')
+            __DIR__.'/../database/migrations' => database_path('migrations'),
         ], 'mailbox-migrations');
 
         if ($this->app->runningInConsole()) {
@@ -62,91 +62,67 @@ class ServiceProvider extends BaseServiceProvider
                 SetupMailbox::class,
                 DestroyMailbox::class,
                 CreateSubscriptions::class,
-                RenewSubscriptions::class
+                RenewSubscriptions::class,
             ]);
         }
     }
 
     /**
      * Register the ClientCredentialContext service.
-     *
-     * @return void
      */
     protected function registerClientService(): void
     {
-        $this->app->singleton(ClientService::class, function() {
-            return new ClientService();
-        });
+        $this->app->singleton(ClientService::class, fn (): ClientService => new ClientService);
 
         $this->app->alias(ClientService::class, 'mailbox.graph.client');
     }
 
     /**
      * Register the Attachment service.
-     *
-     * @return void
      */
     protected function registerAttachmentService(): void
     {
-        $this->app->singleton(AttachmentService::class, function() {
-            return new AttachmentService(app(ClientService::class));
-        });
+        $this->app->singleton(AttachmentService::class, fn (): AttachmentService => new AttachmentService(resolve(ClientService::class)));
 
         $this->app->alias(AttachmentService::class, 'mailbox.attachments');
     }
 
     /**
      * Register the folder service.
-     *
-     * @return void
      */
     protected function registerFolderService(): void
     {
-        $this->app->singleton(FolderService::class, function() {
-            return new FolderService(app(ClientService::class));
-        });
+        $this->app->singleton(FolderService::class, fn (): FolderService => new FolderService(resolve(ClientService::class)));
 
         $this->app->alias(FolderService::class, 'mailbox.folders');
     }
 
     /**
      * Register the message service.
-     *
-     * @return void
      */
     protected function registerMessageService(): void
     {
-        $this->app->singleton(MessageService::class, function() {
-            return new MessageService(app(ClientService::class));
-        });
+        $this->app->singleton(MessageService::class, fn (): MessageService => new MessageService(resolve(ClientService::class)));
 
         $this->app->alias(MessageService::class, 'mailbox.messages');
     }
 
     /**
      * Register the mdoel service.
-     *
-     * @return void
      */
     protected function registerModelService(): void
     {
-        $this->app->singleton(ModelService::class, function() {
-            return new ModelService();
-        });
+        $this->app->singleton(ModelService::class, fn (): ModelService => new ModelService);
 
         $this->app->alias(ModelService::class, 'mailbox.models');
     }
 
     /**
      * Register the subscription service.
-     *
-     * @return void
      */
     protected function registerSubscriptionService(): void
     {
-        $this->app->singleton(SubscriptionService::class, function() {
-            return new SubscriptionService(app(ClientService::class));
-        });
+        $this->app->singleton(SubscriptionService::class, fn (): SubscriptionService => new SubscriptionService(resolve(ClientService::class)));
 
         $this->app->alias(SubscriptionService::class, 'mailbox.subscriptions');
     }

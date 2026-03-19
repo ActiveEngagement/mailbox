@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('mailbox_messages', function (Blueprint $table) {
+        Schema::table('mailbox_messages', function (Blueprint $table): void {
             $table->binary('external_id', 256)->change();
             $table->binary('conversation_id', 80)->change();
         });
@@ -22,7 +22,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('mailbox_messages', function (Blueprint $table) {
+        Schema::table('mailbox_messages', function (Blueprint $table): void {
             //
         });
     }

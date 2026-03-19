@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('mailboxes', function (Blueprint $table) {
+        Schema::create('mailboxes', function (Blueprint $table): void {
             $table->integerIncrements('id');
             $table->string('email')->unique();
             $table->string('connection');

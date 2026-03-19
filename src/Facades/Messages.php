@@ -1,26 +1,39 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Actengage\Mailbox\Facades;
 
+use Actengage\Mailbox\Data\Conditional;
+use Actengage\Mailbox\Data\Filter;
+use Actengage\Mailbox\Models\Mailbox;
+use Actengage\Mailbox\Models\MailboxFolder;
+use Actengage\Mailbox\Models\MailboxMessage;
+use Actengage\Mailbox\Services\MessageService;
+use Http\Promise\Promise;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Facade;
+use Microsoft\Graph\Generated\Models\Message;
+use Microsoft\Graph\Generated\Models\ODataErrors\ODataError;
 
 /**
- * @see \Actengage\Mailbox\Services\MessageService
- * @method static \Http\Promise\Promise<\Microsoft\Graph\Generated\Models\Message> find(string $userId, string $messageId)
- * @method static void all(string $userId, array<int,string>|null $filter, callable $iterator)
- * @method static \Http\Promise\Promise<\Actengage\Mailbox\Models\MailboxMessage> create(\Actengage\Mailbox\Models\Mailbox $mailbox)
- * @method static \Http\Promise\Promise<\Actengage\Mailbox\Models\MailboxMessage> createReply(\Actengage\Mailbox\Models\MailboxMessage $message)
- * @method static \Http\Promise\Promise<\Actengage\Mailbox\Models\MailboxMessage> createReplyAll(\Actengage\Mailbox\Models\MailboxMessage $message)
- * @method static \Http\Promise\Promise<\Actengage\Mailbox\Models\MailboxMessage> createForward(\Actengage\Mailbox\Models\MailboxMessage $message)
- * @method static \Http\Promise\Promise<\Microsoft\Graph\Generated\Models\Message> patch(\Actengage\Mailbox\Models\MailboxMessage $message)
- * @method static \Http\Promise\Promise<\Microsoft\Graph\Generated\Models\Message> move(\Actengage\Mailbox\Models\MailboxMessage $message, \Actengage\Mailbox\Models\MailboxFolder $folder)
- * @method static \Illuminate\Support\Collection<int, \Microsoft\Graph\Generated\Models\ODataErrors\ODataError> delete(\Actengage\Mailbox\Models\MailboxMessage ...$message)
- * @method static \Http\Promise\Promise<void|null> send(\Actengage\Mailbox\Models\MailboxMessage $message)
- * @method static \Actengage\Mailbox\Models\MailboxMessage save(\Actengage\Mailbox\Models\Mailbox $mailbox, \Microsoft\Graph\Generated\Models\Message $message)
+ * @see MessageService
+ *
+ * @method static Promise<Message|null> find(string $userId, string $messageId)
+ * @method static void all(string $userId, callable $iterator, Conditional|Filter|string|null $filter = null)
+ * @method static Promise<MailboxMessage|null> create(Mailbox $mailbox)
+ * @method static Promise<MailboxMessage|null> createReply(MailboxMessage $message)
+ * @method static Promise<MailboxMessage|null> createReplyAll(MailboxMessage $message)
+ * @method static Promise<MailboxMessage|null> createForward(MailboxMessage $message)
+ * @method static Promise<Message|null> patch(MailboxMessage $message)
+ * @method static Promise<Message|null> move(MailboxMessage $message, MailboxFolder $folder)
+ * @method static Collection<int, ODataError> delete(MailboxMessage ...$message)
+ * @method static Promise<void|null> send(MailboxMessage $message)
+ * @method static MailboxMessage save(Mailbox $mailbox, Message $message)
  */
 class Messages extends Facade
 {
-    protected static function getFacadeAccessor()
+    protected static function getFacadeAccessor(): string
     {
         return 'mailbox.messages';
     }

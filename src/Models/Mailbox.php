@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Actengage\Mailbox\Models;
 
 use Actengage\Mailbox\Events\MailboxCreated;
@@ -8,14 +10,23 @@ use Actengage\Mailbox\Events\MailboxDeleting;
 use Actengage\Mailbox\Events\MailboxUpdated;
 use Actengage\Mailbox\Support\BroadcastsEventsToOthers;
 use Database\Factories\MailboxFactory;
+use Illuminate\Broadcasting\Channel;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Spatie\TypeScriptTransformer\Attributes\LiteralTypeScriptType;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
+/**
+ * @property int $id
+ * @property string $email
+ * @property string $connection
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ */
 #[TypeScript]
 #[LiteralTypeScriptType([
     'id' => 'number',
@@ -25,20 +36,23 @@ use Spatie\TypeScriptTransformer\Attributes\TypeScript;
     'updated_at' => 'string',
     'folders?' => 'MailboxFolder[]',
     'messages?' => 'MailboxMessage[]',
-    'subscriptions?' => 'MailboxSubscription[]'
+    'subscriptions?' => 'MailboxSubscription[]',
 ])]
 class Mailbox extends Model
-{    
-    use BroadcastsEventsToOthers, HasFactory;
+{
+    use BroadcastsEventsToOthers;
+
+    /** @use HasFactory<MailboxFactory> */
+    use HasFactory;
 
     /**
      * The attributes that are mass assignable.
      *
-     * @var array<int, string>
+     * @var list<string>
      */
     protected $fillable = [
         'email',
-        'connection'
+        'connection',
     ];
 
     /**
@@ -46,7 +60,7 @@ class Mailbox extends Model
      *
      * Allows for object-based events for native Eloquent events.
      *
-     * @var array<string,class-string>
+     * @var array<string, class-string>
      */
     protected $dispatchesEvents = [
         'created' => MailboxCreated::class,
@@ -58,7 +72,7 @@ class Mailbox extends Model
     /**
      * Get the folders assigned to the mailbox.
      *
-     * @return HasMany<MailboxFolder>
+     * @return HasMany<MailboxFolder, $this>
      */
     public function folders(): HasMany
     {
@@ -68,7 +82,7 @@ class Mailbox extends Model
     /**
      * Get the messages assigned to the mailbox.
      *
-     * @return HasMany<MailboxMessage>
+     * @return HasMany<MailboxMessage, $this>
      */
     public function messages(): HasMany
     {
@@ -78,141 +92,101 @@ class Mailbox extends Model
     /**
      * Get the subscriptions assigned to the mailbox.
      *
-     * @return HasMany<MailboxSubscription>
+     * @return HasMany<MailboxSubscription, $this>
      */
     public function subscriptions(): HasMany
     {
         return $this->hasMany(MailboxSubscription::class);
     }
-    
+
     /**
      * Scope the query for the give email addresses.
      *
-     * @param Builder $query
-     * @param Mailbox|string ...$email
-     * @return void
+     * @param  Builder<Mailbox>  $query
      */
-    public function scopeEmail(Builder $query, Mailbox|string ...$email): void
+    protected function scopeEmail(Builder $query, Mailbox|string ...$email): void
     {
-        $query->whereIn('email', collect($email)->map(function(Mailbox|string $mailbox) {
-            return $mailbox instanceof Mailbox ? $mailbox->email : $mailbox;
-        }));
+        $query->whereIn('email', collect($email)->map(fn (Mailbox|string $mailbox): string => $mailbox instanceof Mailbox ? $mailbox->email : $mailbox));
     }
 
     /**
      * Scope the query to the given mailboxes.
      *
-     * @param Builder $query
-     * @param Mailbox|string ...$mailbox
-     * @return void
+     * @param  Builder<Mailbox>  $query
      */
-    public function scopeMailbox(Builder $query, Mailbox|string ...$mailbox): void
+    protected function scopeMailbox(Builder $query, Mailbox|string ...$mailbox): void
     {
-        $query->whereIn('id', collect($mailbox)->map(function(Mailbox|string $mailbox) {
-            return $mailbox instanceof Mailbox ? $mailbox->getKey() : $mailbox;
-        }));
+        $query->whereIn('id', collect($mailbox)->map(fn (Mailbox|string $mailbox): mixed => $mailbox instanceof Mailbox ? $mailbox->getKey() : $mailbox));
     }
 
     /**
      * Get the Archive folder.
-     *
-     * @return MailboxFolder|null
      */
     public function archiveFolder(): ?MailboxFolder
     {
-        return Cache::rememberForever("mailbox.{$this->id}.folders.archive", function() {
-            return $this->folders()->whereName('Archive')->first();
-        });
+        return Cache::rememberForever(sprintf('mailbox.%s.folders.archive', $this->id), fn () => $this->folders()->whereName('Archive')->first());
     }
 
     /**
      * Get the Conversation History folder.
-     *
-     * @return MailboxFolder|null
      */
     public function conversationHistoryFolder(): ?MailboxFolder
     {
-        return Cache::rememberForever("mailbox.{$this->id}.folders.conversationHistory", function() {
-            return $this->folders()->whereName('Conversation History')->first();
-        });
+        return Cache::rememberForever(sprintf('mailbox.%s.folders.conversationHistory', $this->id), fn () => $this->folders()->whereName('Conversation History')->first());
     }
 
     /**
      * Get the Deleted Items folder.
-     *
-     * @return MailboxFolder|null
      */
     public function deletedItemsFolder(): ?MailboxFolder
     {
-        return Cache::rememberForever("mailbox.{$this->id}.folders.deletedItems", function() {
-            return $this->folders()->whereName('Deleted Items')->first();
-        });
+        return Cache::rememberForever(sprintf('mailbox.%s.folders.deletedItems', $this->id), fn () => $this->folders()->whereName('Deleted Items')->first());
     }
 
     /**
      * Get the Drafts folder.
-     *
-     * @return MailboxFolder|null
      */
     public function draftsFolder(): ?MailboxFolder
     {
-        return Cache::rememberForever("mailbox.{$this->id}.folders.drafts", function() {
-            return $this->folders()->whereName('Drafts')->first();
-        });
+        return Cache::rememberForever(sprintf('mailbox.%s.folders.drafts', $this->id), fn () => $this->folders()->whereName('Drafts')->first());
     }
 
     /**
      * Get the Inbox folder.
-     *
-     * @return MailboxFolder|null
      */
     public function inboxFolder(): ?MailboxFolder
     {
-        return Cache::rememberForever("mailbox.{$this->id}.folders.inbox", function() {
-            return $this->folders()->whereName('Inbox')->first();
-        });
+        return Cache::rememberForever(sprintf('mailbox.%s.folders.inbox', $this->id), fn () => $this->folders()->whereName('Inbox')->first());
     }
 
     /**
      * Get the Junk Email folder.
-     *
-     * @return MailboxFolder|null
      */
     public function junkEmailFolder(): ?MailboxFolder
     {
-        return Cache::rememberForever("mailbox.{$this->id}.folders.junkEmail", function() {
-            return $this->folders()->whereName('Junk Email')->first();
-        });
+        return Cache::rememberForever(sprintf('mailbox.%s.folders.junkEmail', $this->id), fn () => $this->folders()->whereName('Junk Email')->first());
     }
 
     /**
      * Get the Outbox folder.
-     *
-     * @return MailboxFolder|null
      */
     public function outboxFolder(): ?MailboxFolder
     {
-        return Cache::rememberForever("mailbox.{$this->id}.folders.outbox", function() {
-            return $this->folders()->whereName('Outbox')->first();
-        });
+        return Cache::rememberForever(sprintf('mailbox.%s.folders.outbox', $this->id), fn () => $this->folders()->whereName('Outbox')->first());
     }
 
     /**
      * Get the Sent Items folder.
-     *
-     * @return MailboxFolder|null
      */
     public function sentItemsFolder(): ?MailboxFolder
     {
-        return Cache::rememberForever("mailbox.{$this->id}.folders.sentItems", function() {
-            return $this->folders()->whereName('Sent Items')->first();
-        });
+        return Cache::rememberForever(sprintf('mailbox.%s.folders.sentItems', $this->id), fn () => $this->folders()->whereName('Sent Items')->first());
     }
 
     /**
      * Get the channels that model events should broadcast on.
      *
-     * @return array<int, \Illuminate\Broadcasting\Channel|\Illuminate\Database\Eloquent\Model>
+     * @return array<int, Channel|Model>
      */
     public function broadcastOn(string $event): array
     {
@@ -221,8 +195,6 @@ class Mailbox extends Model
 
     /**
      * Create a new factory.
-     *
-     * @return MailboxFactory
      */
     protected static function newFactory(): MailboxFactory
     {

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Actengage\Mailbox\Models;
 
 use Actengage\Mailbox\Events\MailboxMessageAttachmentCreated;
@@ -8,16 +10,37 @@ use Actengage\Mailbox\Events\MailboxMessageAttachmentDeleting;
 use Actengage\Mailbox\Events\MailboxMessageAttachmentUpdated;
 use Actengage\Mailbox\Support\BroadcastsEventsToOthers;
 use Database\Factories\MailboxMessageAttachmentFactory;
+use Illuminate\Broadcasting\Channel;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Laravel\Scout\Searchable;
+use Override;
 use Spatie\TypeScriptTransformer\Attributes\LiteralTypeScriptType;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
+/**
+ * @property int $id
+ * @property int $mailbox_id
+ * @property int $message_id
+ * @property string $disk
+ * @property string $name
+ * @property int $size
+ * @property string $content_type
+ * @property string $path
+ * @property string $url
+ * @property string|null $contents
+ * @property string $base64_contents
+ * @property Carbon|null $last_modified_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property-read Mailbox|null $mailbox
+ * @property-read MailboxMessage|null $message
+ */
 #[TypeScript]
 #[LiteralTypeScriptType([
     'id' => 'number',
@@ -36,12 +59,17 @@ use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 ])]
 class MailboxMessageAttachment extends Model
 {
-    use BroadcastsEventsToOthers, HasFactory, Searchable;
-    
+    use BroadcastsEventsToOthers;
+
+    /** @use HasFactory<MailboxMessageAttachmentFactory> */
+    use HasFactory;
+
+    use Searchable;
+
     /**
      * The attributes that are mass assignable.
      *
-     * @var array<int, string>
+     * @var list<string>
      */
     protected $fillable = [
         'disk',
@@ -49,16 +77,16 @@ class MailboxMessageAttachment extends Model
         'size',
         'content_type',
         'path',
-        'last_modified_at'
+        'last_modified_at',
     ];
 
     /**
      * The attributes that are appended.
      *
-     * @var array<int, string>
+     * @var list<string>
      */
     protected $appends = [
-        'url'
+        'url',
     ];
 
     /**
@@ -66,7 +94,7 @@ class MailboxMessageAttachment extends Model
      *
      * Allows for object-based events for native Eloquent events.
      *
-     * @var array<string,class-string>
+     * @var array<string, class-string>
      */
     protected $dispatchesEvents = [
         'created' => MailboxMessageAttachmentCreated::class,
@@ -78,9 +106,10 @@ class MailboxMessageAttachment extends Model
     /**
      * The attributes that are cast.
      *
-     * @return array
+     * @return array<string, string>
      */
-    public function casts(): array
+    #[Override]
+    protected function casts(): array
     {
         return [
             'last_modified_at' => 'datetime',
@@ -90,7 +119,7 @@ class MailboxMessageAttachment extends Model
     /**
      * Get the parent mailbox.
      *
-     * @return BelongsTo<Mailbox>
+     * @return BelongsTo<Mailbox, $this>
      */
     public function mailbox(): BelongsTo
     {
@@ -98,9 +127,9 @@ class MailboxMessageAttachment extends Model
     }
 
     /**
-     * Get the parent mailbox.
+     * Get the parent message.
      *
-     * @return BelongsTo<MailboxMessage>
+     * @return BelongsTo<MailboxMessage, $this>
      */
     public function message(): BelongsTo
     {
@@ -110,11 +139,9 @@ class MailboxMessageAttachment extends Model
     /**
      * Scope the query by the given name.
      *
-     * @param Builder $query
-     * @param string ...$name
-     * @return void
+     * @param  Builder<MailboxMessageAttachment>  $query
      */
-    public function scopeName(Builder $query, string ...$name)
+    protected function scopeName(Builder $query, string ...$name): void
     {
         $query->whereIn('name', $name);
     }
@@ -122,64 +149,63 @@ class MailboxMessageAttachment extends Model
     /**
      * Get the absolute url from storage.
      *
-     * @return string
+     * @return Attribute<string, never>
      */
-    public function url(): Attribute
+    protected function url(): Attribute
     {
         return Attribute::make(
-            get: fn() => Storage::disk($this->disk)->url($this->path)
+            get: fn (): string => Storage::disk($this->disk)->url($this->path)
         );
     }
-    
+
     /**
      * Get the contents from storage.
      *
-     * @return string
+     * @return Attribute<string|null, never>
      */
-    public function contents(): Attribute
+    protected function contents(): Attribute
     {
         return Attribute::make(
-            get: fn() => Storage::disk($this->disk)->get($this->path)
+            get: fn (): ?string => Storage::disk($this->disk)->get($this->path)
         );
     }
 
     /**
      * Get the base64 contents from storage.
      *
-     * @return string
+     * @return Attribute<string, never>
      */
-    public function base64Contents(): Attribute
+    protected function base64Contents(): Attribute
     {
         return Attribute::make(
-            get: fn() => base64_encode($this->contents)
+            get: fn (): string => base64_encode((string) $this->contents)
         );
     }
+
     /**
      * Get the channels that model events should broadcast on.
      *
-     * @return array<int, \Illuminate\Broadcasting\Channel|\Illuminate\Database\Eloquent\Model>
+     * @return array<int, Channel|Model>
      */
     public function broadcastOn(string $event): array
     {
-        return [$this, $this->mailbox, $this->message];
+        return array_values(array_filter([$this, $this->mailbox, $this->message]));
     }
 
     /**
      * Get the indexable data array for the model.
      *
-     * @return array
+     * @return array<string, mixed>
      */
     public function toSearchableArray(): array
     {
         return [
-            'name' => $this->name
+            'name' => $this->name,
         ];
     }
 
     /**
      * Create a new factory.
-     *
-     * @return MailboxMessageFactory
      */
     protected static function newFactory(): MailboxMessageAttachmentFactory
     {

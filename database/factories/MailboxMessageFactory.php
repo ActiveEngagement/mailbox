@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Database\Factories;
 
 use Actengage\Mailbox\Enums\Importance;
@@ -14,17 +16,10 @@ use Microsoft\Graph\Generated\Models\FollowupFlagStatus;
 use Microsoft\Graph\Generated\Models\ItemBody;
 
 /**
- * @template TModel of \Actengage\Mailbox\Models\MailboxMessage
- *
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<TModel>
+ * @extends Factory<MailboxMessage>
  */
 class MailboxMessageFactory extends Factory
 {
-    /**
-     * The name of the factory's corresponding model.
-     *
-     * @var class-string<TModel>
-     */
     protected $model = MailboxMessage::class;
 
     /**
@@ -34,21 +29,21 @@ class MailboxMessageFactory extends Factory
      */
     public function definition(): array
     {
-        $body = new ItemBody();
+        $body = new ItemBody;
         $body->setContent(fake()->randomHtml());
         $body->setContentType(new BodyType('html'));
 
         $flagStatus = new FollowupFlagStatus(FollowupFlagStatus::FLAGGED);
 
-        $flagStartDate = new DateTimeTimeZone();
+        $flagStartDate = new DateTimeTimeZone;
         $flagStartDate->setDateTime((string) now());
         $flagStartDate->setTimeZone('UTC');
 
-        $flagDueDate = new DateTimeTimeZone();
-        $flagDueDate->setDateTime((string) now()->addDay(1));
+        $flagDueDate = new DateTimeTimeZone;
+        $flagDueDate->setDateTime((string) now()->addDay());
         $flagDueDate->setTimeZone('UTC');
 
-        $flag = new FollowupFlag();
+        $flag = new FollowupFlag;
         $flag->setFlagStatus($flagStatus);
         $flag->setStartDateTime($flagStartDate);
         $flag->setDueDateTime($flagDueDate);
@@ -68,24 +63,20 @@ class MailboxMessageFactory extends Factory
             'cc' => [$this->email(), $this->emailWithoutName()],
             'bcc' => [$this->email(), $this->emailWithoutName()],
             'subject' => fake()->sentence(),
-            'body' => $body
+            'body' => $body,
         ];
     }
 
     /**
      * Create an email with a name.
-     *
-     * @return string
      */
     protected function email(): string
     {
-        return fake()->name() . '<' . fake()->email() . '>';
+        return fake()->name().'<'.fake()->email().'>';
     }
 
     /**
      * Create an email without a name.
-     *
-     * @return string
      */
     protected function emailWithoutName(): string
     {

@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Actengage\Mailbox\Casts;
 
 use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
 use Illuminate\Database\Eloquent\Model;
-use InvalidArgumentException;
 use Microsoft\Graph\Generated\Models\ItemBody;
 
+/** @implements CastsAttributes<string|null, string|ItemBody|null> */
 class Body implements CastsAttributes
 {
     public bool $withoutObjectCaching = true;
@@ -15,33 +17,27 @@ class Body implements CastsAttributes
      * Cast the given value.
      *
      * @param  array<string, mixed>  $attributes
-     * @return string|null
      */
     public function get(Model $model, string $key, mixed $value, array $attributes): ?string
     {
-        return $value;
+        if ($value === null) {
+            return null;
+        }
+
+        return is_string($value) ? $value : (string) json_encode($value);
     }
- 
+
     /**
      * Prepare the given value for storage.
      *
      * @param  array<string, mixed>  $attributes
-     * @return string|null
      */
     public function set(Model $model, string $key, mixed $value, array $attributes): ?string
     {
-        if(is_null($value)) {
-            return null;
-        }
-
-        if(is_string($value)) {
-            return $value;
-        }
-
-        if($value instanceof ItemBody) {
-            return $value->getContent();
-        }
-
-        throw new InvalidArgumentException("Unsupported type");
+        return match (true) {
+            $value === null => null,
+            is_string($value) => $value,
+            $value instanceof ItemBody => $value->getContent(),
+        };
     }
 }
