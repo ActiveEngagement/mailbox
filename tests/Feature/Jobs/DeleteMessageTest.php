@@ -10,15 +10,15 @@ it('deletes a message by external id', function (): void {
         'external_id' => 'ext-123',
     ]);
 
-    (new DeleteMessage($mailbox, 'ext-123'))->handle();
+    new DeleteMessage($mailbox, 'ext-123')->handle();
 
-    expect(MailboxMessage::find($message->id))->toBeNull();
+    expect(MailboxMessage::query()->find($message->id))->toBeNull();
 });
 
 it('does nothing when message does not exist', function (): void {
     $mailbox = Mailbox::factory()->create();
 
-    (new DeleteMessage($mailbox, 'nonexistent'))->handle();
+    new DeleteMessage($mailbox, 'nonexistent')->handle();
 
-    expect(MailboxMessage::count())->toBe(0);
+    expect(MailboxMessage::query()->count())->toBe(0);
 });

@@ -10,7 +10,7 @@ it('dispatches the ProcessedUrlsAsAttachments event', function (): void {
 
     $message = MailboxMessage::factory()->create();
 
-    (new FinishedProcessingUrlsAsAttachments($message))->handle();
+    new FinishedProcessingUrlsAsAttachments($message)->handle();
 
     Event::assertDispatched(ProcessedUrlsAsAttachments::class, fn (ProcessedUrlsAsAttachments $event): bool => $event->model->is($message));
 });

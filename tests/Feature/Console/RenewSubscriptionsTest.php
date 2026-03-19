@@ -28,7 +28,7 @@ it('renews subscriptions that are expiring soon', function (): void {
         ->expectsOutputToContain('renew@test.com have been resubscribed!')
         ->assertExitCode(0);
 
-    expect(MailboxSubscription::find($subscription->id))->toBeNull();
+    expect(MailboxSubscription::query()->find($subscription->id))->toBeNull();
 });
 
 it('warns when no subscriptions need renewal', function (): void {

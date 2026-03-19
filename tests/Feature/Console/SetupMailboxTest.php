@@ -6,6 +6,8 @@ use Actengage\Mailbox\Facades\Messages;
 use Actengage\Mailbox\Facades\Subscriptions;
 use Actengage\Mailbox\Models\Mailbox;
 use Illuminate\Support\Collection;
+use Microsoft\Graph\Generated\Models\MailFolder;
+use Microsoft\Graph\Generated\Models\Message;
 
 it('sets up a mailbox with folders, messages, and subscriptions', function (): void {
     Client::shouldReceive('connection')->andReturn('default');
@@ -50,9 +52,7 @@ it('uses a date filter when --after option is provided', function (): void {
 
     Messages::shouldReceive('all')
         ->once()
-        ->withArgs(function (string $email, callable $iterator, $filter) {
-            return $email === 'after@test.com' && $filter !== null;
-        });
+        ->withArgs(fn (string $email, callable $iterator, $filter): bool => $email === 'after@test.com' && $filter !== null);
 
     Subscriptions::shouldReceive('subscribe')->once();
 
@@ -61,7 +61,7 @@ it('uses a date filter when --after option is provided', function (): void {
 });
 
 it('saves folders returned by the API', function (): void {
-    $graphFolder = new \Microsoft\Graph\Generated\Models\MailFolder;
+    $graphFolder = new MailFolder;
     $graphFolder->setId('folder-id');
     $graphFolder->setDisplayName('Inbox');
 
@@ -73,7 +73,7 @@ it('saves folders returned by the API', function (): void {
 
     Folders::shouldReceive('save')
         ->once()
-        ->withArgs(fn (Mailbox $mailbox, \Microsoft\Graph\Generated\Models\MailFolder $folder) => $folder->getId() === 'folder-id');
+        ->withArgs(fn (Mailbox $mailbox, MailFolder $folder): bool => $folder->getId() === 'folder-id');
 
     Messages::shouldReceive('all')->once();
 
@@ -84,7 +84,7 @@ it('saves folders returned by the API', function (): void {
 });
 
 it('saves messages returned by the API', function (): void {
-    $graphMessage = new \Microsoft\Graph\Generated\Models\Message;
+    $graphMessage = new Message;
     $graphMessage->setId('msg-id');
 
     Client::shouldReceive('connection')->andReturn('default');
@@ -95,7 +95,7 @@ it('saves messages returned by the API', function (): void {
 
     Messages::shouldReceive('all')
         ->once()
-        ->withArgs(function (string $email, callable $iterator, $filter) use ($graphMessage) {
+        ->withArgs(function (string $email, callable $iterator, $filter) use ($graphMessage): bool {
             $iterator($graphMessage);
 
             return $email === 'msgs@test.com';

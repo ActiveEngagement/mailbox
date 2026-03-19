@@ -25,7 +25,7 @@ it('finds and saves the message', function (): void {
         ->with($mailbox, $graphMessage)
         ->andReturn($model);
 
-    (new UpdateMessage($mailbox, 'ext-id'))->handle();
+    new UpdateMessage($mailbox, 'ext-id')->handle();
 });
 
 it('handles null message from promise', function (): void {
@@ -39,5 +39,5 @@ it('handles null message from promise', function (): void {
 
     Messages::shouldReceive('save')->never();
 
-    (new UpdateMessage($mailbox, 'ext-id'))->handle();
+    new UpdateMessage($mailbox, 'ext-id')->handle();
 });

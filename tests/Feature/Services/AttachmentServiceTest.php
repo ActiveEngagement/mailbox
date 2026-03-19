@@ -409,11 +409,12 @@ it('dispatches FinishedProcessingUrlsAsAttachments when chain fails', function (
 
     Bus::shouldReceive('chain')
         ->once()
-        ->andReturnUsing(function () use (&$catchCallback) {
-            return new class($catchCallback) {
+        ->andReturnUsing(function () use (&$catchCallback): object {
+            return new class($catchCallback)
+            {
                 private mixed $cb;
 
-                public function __construct(private mixed &$ref)
+                public function __construct(mixed &$ref)
                 {
                     $this->cb = &$ref;
                 }

@@ -100,7 +100,7 @@ it('saves a folder with child folders recursively', function (): void {
     $service = new FolderService(Mockery::mock(ClientService::class));
     $service->save($mailbox, $parent);
 
-    expect(MailboxFolder::count())->toBe(2);
+    expect(MailboxFolder::query()->count())->toBe(2);
 
     $childModel = MailboxFolder::query()->externalId('child-ext-id')->first();
     expect($childModel)->not->toBeNull();

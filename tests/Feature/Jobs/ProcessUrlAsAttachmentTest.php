@@ -34,7 +34,7 @@ it('creates an attachment when the response has a content-disposition attachment
         ->once()
         ->andReturn($attachment);
 
-    (new ProcessUrlAsAttachment($message, 'https://example.com/file.pdf'))->handle();
+    new ProcessUrlAsAttachment($message, 'https://example.com/file.pdf')->handle();
 });
 
 it('skips when the response has no content-disposition header', function (): void {
@@ -51,7 +51,7 @@ it('skips when the response has no content-disposition header', function (): voi
 
     Attachments::shouldReceive('createFromResponse')->never();
 
-    (new ProcessUrlAsAttachment($message, 'https://example.com/page'))->handle();
+    new ProcessUrlAsAttachment($message, 'https://example.com/page')->handle();
 });
 
 it('skips when the content-disposition type is not attachment', function (): void {
@@ -74,5 +74,5 @@ it('skips when the content-disposition type is not attachment', function (): voi
 
     Attachments::shouldReceive('createFromResponse')->never();
 
-    (new ProcessUrlAsAttachment($message, 'https://example.com/image.jpg'))->handle();
+    new ProcessUrlAsAttachment($message, 'https://example.com/image.jpg')->handle();
 });

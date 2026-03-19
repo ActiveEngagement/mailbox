@@ -23,6 +23,6 @@ it('destroys a mailbox and its subscriptions', function (): void {
         ->expectsOutputToContain('destroy@test.com was destroyed!')
         ->assertExitCode(0);
 
-    expect(Mailbox::find($mailbox->id))->toBeNull();
-    expect(MailboxSubscription::find($subscription->id))->toBeNull();
+    expect(Mailbox::query()->find($mailbox->id))->toBeNull();
+    expect(MailboxSubscription::query()->find($subscription->id))->toBeNull();
 });

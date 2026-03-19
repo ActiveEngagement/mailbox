@@ -23,6 +23,7 @@ use Microsoft\Graph\Generated\Models\ItemBody;
 use Microsoft\Graph\Generated\Models\MailFolder;
 use Microsoft\Graph\Generated\Models\Message;
 use Microsoft\Graph\Generated\Models\MessageCollectionResponse;
+use Microsoft\Graph\Generated\Models\ODataErrors\ODataError;
 use Microsoft\Graph\Generated\Models\Recipient;
 use Microsoft\Graph\Generated\Users\Item\Messages\Item\CreateForward\CreateForwardRequestBuilder;
 use Microsoft\Graph\Generated\Users\Item\Messages\Item\CreateReply\CreateReplyRequestBuilder;
@@ -51,11 +52,13 @@ it('saves a message to the database', function (): void {
     $from = new EmailAddress;
     $from->setAddress('sender@test.com');
     $from->setName('Sender');
+
     $fromRecipient = new Recipient;
     $fromRecipient->setEmailAddress($from);
 
     $to = new EmailAddress;
     $to->setAddress('recipient@test.com');
+
     $toRecipient = new Recipient;
     $toRecipient->setEmailAddress($to);
 
@@ -70,7 +73,7 @@ it('saves a message to the database', function (): void {
     $graphMessage->setInternetMessageId('<msg@test.com>');
     $graphMessage->setIsRead(true);
     $graphMessage->setIsDraft(false);
-    $graphMessage->setFlag((function () {
+    $graphMessage->setFlag((function (): FollowupFlag {
         $flag = new FollowupFlag;
         $flag->setFlagStatus(new FollowupFlagStatus('notFlagged'));
 
@@ -117,7 +120,7 @@ it('saves a message with an existing folder', function (): void {
     $graphMessage->setSubject('Test');
     $graphMessage->setIsRead(false);
     $graphMessage->setIsDraft(false);
-    $graphMessage->setFlag((function () {
+    $graphMessage->setFlag((function (): FollowupFlag {
         $flag = new FollowupFlag;
         $flag->setFlagStatus(new FollowupFlagStatus('notFlagged'));
 
@@ -146,7 +149,7 @@ it('saves a message with attachments', function (): void {
     $graphMessage->setSubject('With Attachment');
     $graphMessage->setIsRead(false);
     $graphMessage->setIsDraft(false);
-    $graphMessage->setFlag((function () {
+    $graphMessage->setFlag((function (): FollowupFlag {
         $flag = new FollowupFlag;
         $flag->setFlagStatus(new FollowupFlagStatus('notFlagged'));
 
@@ -194,7 +197,7 @@ it('saves a message with unknown folder and resolves via Folders facade', functi
     $graphMessage->setSubject('Test');
     $graphMessage->setIsRead(false);
     $graphMessage->setIsDraft(false);
-    $graphMessage->setFlag((function () {
+    $graphMessage->setFlag((function (): FollowupFlag {
         $flag = new FollowupFlag;
         $flag->setFlagStatus(new FollowupFlagStatus('notFlagged'));
 
@@ -225,7 +228,7 @@ it('updates an existing message on save when external_id matches', function (): 
     $graphMessage->setSubject('Updated Subject');
     $graphMessage->setIsRead(true);
     $graphMessage->setIsDraft(false);
-    $graphMessage->setFlag((function () {
+    $graphMessage->setFlag((function (): FollowupFlag {
         $flag = new FollowupFlag;
         $flag->setFlagStatus(new FollowupFlagStatus('notFlagged'));
 
@@ -318,7 +321,7 @@ it('creates a draft message', function (): void {
     $graphMessage->setId('draft-id');
     $graphMessage->setConversationId('conv-id');
     $graphMessage->setIsDraft(true);
-    $graphMessage->setFlag((function () {
+    $graphMessage->setFlag((function (): FollowupFlag {
         $flag = new FollowupFlag;
         $flag->setFlagStatus(new FollowupFlagStatus('notFlagged'));
 
@@ -393,7 +396,7 @@ it('creates a draft reply', function (): void {
     $graphMessage->setId('reply-draft-id');
     $graphMessage->setConversationId('conv-id');
     $graphMessage->setIsDraft(true);
-    $graphMessage->setFlag((function () {
+    $graphMessage->setFlag((function (): FollowupFlag {
         $flag = new FollowupFlag;
         $flag->setFlagStatus(new FollowupFlagStatus('notFlagged'));
 
@@ -447,7 +450,7 @@ it('creates a draft reply all', function (): void {
     $graphMessage->setId('reply-all-draft-id');
     $graphMessage->setConversationId('conv-id');
     $graphMessage->setIsDraft(true);
-    $graphMessage->setFlag((function () {
+    $graphMessage->setFlag((function (): FollowupFlag {
         $flag = new FollowupFlag;
         $flag->setFlagStatus(new FollowupFlagStatus('notFlagged'));
 
@@ -501,7 +504,7 @@ it('creates a draft forward', function (): void {
     $graphMessage->setId('forward-draft-id');
     $graphMessage->setConversationId('conv-id');
     $graphMessage->setIsDraft(true);
-    $graphMessage->setFlag((function () {
+    $graphMessage->setFlag((function (): FollowupFlag {
         $flag = new FollowupFlag;
         $flag->setFlagStatus(new FollowupFlagStatus('notFlagged'));
 
@@ -555,12 +558,13 @@ it('patches a message via the Graph API', function (): void {
     $graphModel->setId((string) $message->external_id);
 
     Models::shouldReceive('makeMessageModel')
-        ->with(Mockery::on(fn ($arg) => $arg->id === $message->id))
+        ->with(Mockery::on(fn ($arg): bool => $arg->id === $message->id))
         ->once()
         ->andReturn($graphModel);
 
     $patchedMessage = new Message;
     $patchedMessage->setId((string) $message->external_id);
+
     $promise = new FulfilledPromise($patchedMessage);
 
     $messageItemBuilder = Mockery::mock(MessageItemRequestBuilder::class);
@@ -601,6 +605,7 @@ it('moves a message to a folder via the Graph API', function (): void {
 
     $movedMessage = new Message;
     $movedMessage->setId((string) $message->external_id);
+
     $promise = new FulfilledPromise($movedMessage);
 
     $moveBuilder = Mockery::mock(MoveRequestBuilder::class);
@@ -688,7 +693,7 @@ it('saves in-reply-to and references from internet message headers', function ()
     $graphMessage->setSubject('Reply Message');
     $graphMessage->setIsRead(true);
     $graphMessage->setIsDraft(false);
-    $graphMessage->setFlag((function () {
+    $graphMessage->setFlag((function (): FollowupFlag {
         $flag = new FollowupFlag;
         $flag->setFlagStatus(new FollowupFlagStatus('notFlagged'));
 
@@ -724,7 +729,7 @@ it('saves a message with multiple attachments', function (): void {
     $graphMessage->setSubject('Multiple Attachments');
     $graphMessage->setIsRead(false);
     $graphMessage->setIsDraft(false);
-    $graphMessage->setFlag((function () {
+    $graphMessage->setFlag((function (): FollowupFlag {
         $flag = new FollowupFlag;
         $flag->setFlagStatus(new FollowupFlagStatus('notFlagged'));
 
@@ -751,7 +756,7 @@ it('does not process attachments when hasAttachments is false', function (): voi
     $graphMessage->setSubject('No Attachments');
     $graphMessage->setIsRead(false);
     $graphMessage->setIsDraft(false);
-    $graphMessage->setFlag((function () {
+    $graphMessage->setFlag((function (): FollowupFlag {
         $flag = new FollowupFlag;
         $flag->setFlagStatus(new FollowupFlagStatus('notFlagged'));
 
@@ -942,12 +947,12 @@ it('returns ODataErrors from batch delete when response items have valid id and 
     $batchResponseItem->shouldReceive('getId')->andReturn('item-1');
     $batchResponseItem->shouldReceive('getBody')->andReturn(Utils::streamFor('{"error": {"code": "ErrorItemNotFound"}}'));
 
-    $odataError = new \Microsoft\Graph\Generated\Models\ODataErrors\ODataError;
+    $odataError = new ODataError;
 
     $batchResponseContent = Mockery::mock(BatchResponseContent::class);
     $batchResponseContent->shouldReceive('getResponses')->andReturn([$batchResponseItem]);
     $batchResponseContent->shouldReceive('getResponseBody')
-        ->with('item-1', \Microsoft\Graph\Generated\Models\ODataErrors\ODataError::class)
+        ->with('item-1', ODataError::class)
         ->andReturn($odataError);
 
     $batchPromise = new FulfilledPromise($batchResponseContent);
@@ -975,7 +980,7 @@ it('returns ODataErrors from batch delete when response items have valid id and 
 
     expect($result)->toBeInstanceOf(Collection::class);
     expect($result)->toHaveCount(1);
-    expect($result[0])->toBeInstanceOf(\Microsoft\Graph\Generated\Models\ODataErrors\ODataError::class);
+    expect($result[0])->toBeInstanceOf(ODataError::class);
 });
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -1094,7 +1099,7 @@ it('saves a message when Folders::find returns null for unknown folder', functio
     $graphMessage->setSubject('Test');
     $graphMessage->setIsRead(false);
     $graphMessage->setIsDraft(false);
-    $graphMessage->setFlag((function () {
+    $graphMessage->setFlag((function (): FollowupFlag {
         $flag = new FollowupFlag;
         $flag->setFlagStatus(new FollowupFlagStatus('notFlagged'));
 

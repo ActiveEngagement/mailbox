@@ -52,5 +52,5 @@ it('deletes existing subscriptions before resubscribing', function (): void {
     $this->artisan('mailbox:subscribe')
         ->assertExitCode(0);
 
-    expect(MailboxSubscription::find($subscription->id))->toBeNull();
+    expect(MailboxSubscription::query()->find($subscription->id))->toBeNull();
 });

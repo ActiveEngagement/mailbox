@@ -31,7 +31,7 @@ it('finds the message, saves it, and processes url attachments', function (): vo
         ->with($model)
         ->once();
 
-    (new CreateMessage($mailbox, 'ext-id'))->handle();
+    new CreateMessage($mailbox, 'ext-id')->handle();
 });
 
 it('handles null message from promise', function (): void {
@@ -46,5 +46,5 @@ it('handles null message from promise', function (): void {
     Messages::shouldReceive('save')->never();
     Attachments::shouldReceive('processUrlsAsAttachments')->never();
 
-    (new CreateMessage($mailbox, 'ext-id'))->handle();
+    new CreateMessage($mailbox, 'ext-id')->handle();
 });

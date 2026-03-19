@@ -28,7 +28,7 @@ it('returns Normal importance for null value', function (): void {
 });
 
 it('returns Normal importance when get receives a non-string non-enum value', function (): void {
-    $cast = new \Actengage\Mailbox\Casts\Importance;
+    $cast = new Actengage\Mailbox\Casts\Importance;
     $model = MailboxMessage::factory()->make();
 
     $result = $cast->get($model, 'importance', 123, []);

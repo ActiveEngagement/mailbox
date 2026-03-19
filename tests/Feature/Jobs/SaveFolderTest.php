@@ -6,6 +6,7 @@ use Actengage\Mailbox\Jobs\SaveFolder;
 use Actengage\Mailbox\Models\Mailbox;
 use Actengage\Mailbox\Models\MailboxFolder;
 use Http\Promise\FulfilledPromise;
+use Http\Promise\RejectedPromise;
 use Microsoft\Graph\Generated\Models\MailFolder;
 
 it('finds and saves the folder', function (): void {
@@ -26,7 +27,7 @@ it('finds and saves the folder', function (): void {
         ->with($mailbox, $graphFolder)
         ->andReturn($model);
 
-    (new SaveFolder($mailbox, 'folder-ext-id'))->handle();
+    new SaveFolder($mailbox, 'folder-ext-id')->handle();
 });
 
 it('handles null folder from promise', function (): void {
@@ -40,7 +41,7 @@ it('handles null folder from promise', function (): void {
 
     Folders::shouldReceive('save')->never();
 
-    (new SaveFolder($mailbox, 'folder-ext-id'))->handle();
+    new SaveFolder($mailbox, 'folder-ext-id')->handle();
 });
 
 it('invokes rejection handler when promise is rejected', function (): void {
@@ -48,14 +49,14 @@ it('invokes rejection handler when promise is rejected', function (): void {
 
     Client::shouldReceive('connect')->with($mailbox->connection)->once();
 
-    $exception = new \RuntimeException('Graph API error');
+    $exception = new RuntimeException('Graph API error');
 
     Folders::shouldReceive('find')
         ->with($mailbox->email, 'folder-ext-id')
-        ->andReturn(new \Http\Promise\RejectedPromise($exception));
+        ->andReturn(new RejectedPromise($exception));
 
     Folders::shouldReceive('save')->never();
 
     // The rejection handler throws, but the promise catches it internally
-    (new SaveFolder($mailbox, 'folder-ext-id'))->handle();
+    new SaveFolder($mailbox, 'folder-ext-id')->handle();
 });

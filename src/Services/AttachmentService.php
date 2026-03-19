@@ -50,6 +50,7 @@ class AttachmentService
             if ($href === null) {
                 continue;
             }
+
             if ($href === '') {
                 continue;
             }

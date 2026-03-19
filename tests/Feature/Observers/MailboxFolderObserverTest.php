@@ -8,39 +8,39 @@ use Illuminate\Support\Facades\Cache;
 it('busts cache when a folder is created', function (): void {
     $mailbox = Mailbox::factory()->create();
 
-    Cache::put("mailbox.{$mailbox->id}.folders.archive", 'cached');
-    Cache::put("mailbox.{$mailbox->id}.folders.drafts", 'cached');
-    Cache::put("mailbox.{$mailbox->id}.folders.sentItems", 'cached');
-    Cache::put("mailbox.{$mailbox->id}.folders.deletedItems", 'cached');
+    Cache::put(sprintf('mailbox.%d.folders.archive', $mailbox->id), 'cached');
+    Cache::put(sprintf('mailbox.%d.folders.drafts', $mailbox->id), 'cached');
+    Cache::put(sprintf('mailbox.%d.folders.sentItems', $mailbox->id), 'cached');
+    Cache::put(sprintf('mailbox.%d.folders.deletedItems', $mailbox->id), 'cached');
 
     MailboxFolder::factory()->for($mailbox)->create();
 
-    expect(Cache::get("mailbox.{$mailbox->id}.folders.archive"))->toBeNull();
-    expect(Cache::get("mailbox.{$mailbox->id}.folders.drafts"))->toBeNull();
-    expect(Cache::get("mailbox.{$mailbox->id}.folders.sentItems"))->toBeNull();
-    expect(Cache::get("mailbox.{$mailbox->id}.folders.deletedItems"))->toBeNull();
+    expect(Cache::get(sprintf('mailbox.%d.folders.archive', $mailbox->id)))->toBeNull();
+    expect(Cache::get(sprintf('mailbox.%d.folders.drafts', $mailbox->id)))->toBeNull();
+    expect(Cache::get(sprintf('mailbox.%d.folders.sentItems', $mailbox->id)))->toBeNull();
+    expect(Cache::get(sprintf('mailbox.%d.folders.deletedItems', $mailbox->id)))->toBeNull();
 });
 
 it('busts cache when a folder is updated', function (): void {
     $mailbox = Mailbox::factory()->create();
     $folder = MailboxFolder::factory()->for($mailbox)->create();
 
-    Cache::put("mailbox.{$mailbox->id}.folders.archive", 'cached');
+    Cache::put(sprintf('mailbox.%d.folders.archive', $mailbox->id), 'cached');
 
     $folder->update(['name' => 'Updated']);
 
-    expect(Cache::get("mailbox.{$mailbox->id}.folders.archive"))->toBeNull();
+    expect(Cache::get(sprintf('mailbox.%d.folders.archive', $mailbox->id)))->toBeNull();
 });
 
 it('busts cache when a folder is deleted', function (): void {
     $mailbox = Mailbox::factory()->create();
     $folder = MailboxFolder::factory()->for($mailbox)->create();
 
-    Cache::put("mailbox.{$mailbox->id}.folders.archive", 'cached');
+    Cache::put(sprintf('mailbox.%d.folders.archive', $mailbox->id), 'cached');
 
     $folder->delete();
 
-    expect(Cache::get("mailbox.{$mailbox->id}.folders.archive"))->toBeNull();
+    expect(Cache::get(sprintf('mailbox.%d.folders.archive', $mailbox->id)))->toBeNull();
 });
 
 it('busts cache on restored', function (): void {

@@ -10,15 +10,15 @@ it('deletes a folder by external id', function (): void {
         'external_id' => 'folder-ext-123',
     ]);
 
-    (new DeleteFolder($mailbox, 'folder-ext-123'))->handle();
+    new DeleteFolder($mailbox, 'folder-ext-123')->handle();
 
-    expect(MailboxFolder::find($folder->id))->toBeNull();
+    expect(MailboxFolder::query()->find($folder->id))->toBeNull();
 });
 
 it('does nothing when folder does not exist', function (): void {
     $mailbox = Mailbox::factory()->create();
 
-    (new DeleteFolder($mailbox, 'nonexistent'))->handle();
+    new DeleteFolder($mailbox, 'nonexistent')->handle();
 
-    expect(MailboxFolder::count())->toBe(0);
+    expect(MailboxFolder::query()->count())->toBe(0);
 });

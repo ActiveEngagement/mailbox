@@ -46,9 +46,9 @@ it('subscribes to folders and messages', function (): void {
     $service = new SubscriptionService($clientService);
     $service->subscribe($mailbox);
 
-    expect(MailboxSubscription::count())->toBe(2);
-    expect(MailboxSubscription::where('external_id', 'folder-sub-id')->exists())->toBeTrue();
-    expect(MailboxSubscription::where('external_id', 'message-sub-id')->exists())->toBeTrue();
+    expect(MailboxSubscription::query()->count())->toBe(2);
+    expect(MailboxSubscription::query()->where('external_id', 'folder-sub-id')->exists())->toBeTrue();
+    expect(MailboxSubscription::query()->where('external_id', 'message-sub-id')->exists())->toBeTrue();
 });
 
 it('handles non-Subscription response in subscribe callback', function (): void {
@@ -70,7 +70,7 @@ it('handles non-Subscription response in subscribe callback', function (): void 
     $service = new SubscriptionService($clientService);
     $service->subscribe($mailbox);
 
-    expect(MailboxSubscription::count())->toBe(0);
+    expect(MailboxSubscription::query()->count())->toBe(0);
 });
 
 it('deletes a subscription by model', function (): void {
@@ -133,7 +133,7 @@ it('creates correct subscription resources for folders and messages', function (
     $subscriptionsBuilder = Mockery::mock(SubscriptionsRequestBuilder::class);
     $subscriptionsBuilder->shouldReceive('post')
         ->twice()
-        ->andReturnUsing(function (Subscription $sub) use (&$capturedSubscriptions) {
+        ->andReturnUsing(function (Subscription $sub) use (&$capturedSubscriptions): FulfilledPromise {
             $capturedSubscriptions[] = $sub;
 
             $response = new Subscription;
@@ -161,7 +161,7 @@ it('creates correct subscription resources for folders and messages', function (
     expect($capturedSubscriptions[1]->getResource())->toBe('/users/inbox@example.com/messages');
     expect($capturedSubscriptions[1]->getChangeType())->toBe('created,updated,deleted');
 
-    expect(MailboxSubscription::count())->toBe(2);
+    expect(MailboxSubscription::query()->count())->toBe(2);
 });
 
 it('uses webhook_host from config for notification url', function (): void {
@@ -181,7 +181,7 @@ it('uses webhook_host from config for notification url', function (): void {
     $subscriptionsBuilder = Mockery::mock(SubscriptionsRequestBuilder::class);
     $subscriptionsBuilder->shouldReceive('post')
         ->twice()
-        ->andReturnUsing(function (Subscription $sub) use (&$capturedSubscriptions) {
+        ->andReturnUsing(function (Subscription $sub) use (&$capturedSubscriptions): FulfilledPromise {
             $capturedSubscriptions[] = $sub;
 
             $response = new Subscription;
@@ -247,14 +247,14 @@ it('creates mailbox subscription with correct attributes', function (): void {
     $service = new SubscriptionService($clientService);
     $service->subscribe($mailbox);
 
-    $folderModel = MailboxSubscription::where('external_id', 'sub-123')->first();
+    $folderModel = MailboxSubscription::query()->where('external_id', 'sub-123')->first();
     expect($folderModel)->not->toBeNull();
     expect($folderModel->resource)->toBe('/users/test/mailFolders');
     expect($folderModel->change_type)->toBe('updated,deleted');
     expect($folderModel->notification_url)->toBe('https://example.com/webhook/folders');
     expect($folderModel->mailbox_id)->toBe($mailbox->id);
 
-    $messageModel = MailboxSubscription::where('external_id', 'sub-456')->first();
+    $messageModel = MailboxSubscription::query()->where('external_id', 'sub-456')->first();
     expect($messageModel)->not->toBeNull();
     expect($messageModel->resource)->toBe('/users/test/messages');
     expect($messageModel->change_type)->toBe('created,updated,deleted');

@@ -4,17 +4,6 @@ use Actengage\Mailbox\Services\ClientService;
 use Microsoft\Graph\GraphServiceClient;
 use Microsoft\Kiota\Authentication\Oauth\ClientCredentialContext;
 
-beforeEach(function (): void {
-    config()->set('mailbox.default', 'testing');
-    config()->set('mailbox.connections.testing', [
-        'tenant_id' => 'test-tenant',
-        'client_id' => 'test-client',
-        'client_secret' => 'test-secret',
-        'scopes' => null,
-        'webhook_host' => null,
-    ]);
-});
-
 it('creates a client on construction', function (): void {
     $service = new ClientService;
 
@@ -99,7 +88,7 @@ it('returns a new GraphServiceClient on connect', function (): void {
 });
 
 it('uses default connection when null is passed to constructor', function (): void {
-    $service = new ClientService(null);
+    $service = new ClientService;
 
     expect($service->connection())->toBe('testing');
     expect($service->config('tenant_id'))->toBe('test-tenant');
@@ -107,7 +96,7 @@ it('uses default connection when null is passed to constructor', function (): vo
 
 it('uses default connection when null is passed to connect', function (): void {
     $service = new ClientService;
-    $service->connect(null);
+    $service->connect();
 
     expect($service->connection())->toBe('testing');
 });
