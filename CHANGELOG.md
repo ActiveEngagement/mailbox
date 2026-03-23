@@ -1,5 +1,17 @@
 # [1.0.0-beta.10](https://github.com/ActiveEngagement/casey-jones-client/compare/v1.0.0-beta.9...v1.0.0-beta.10) (2024-12-19)
 
+## 1.0.1
+
+### Patch Changes
+
+- [#4](https://github.com/ActiveEngagement/mailbox/pull/4) [`1e21936`](https://github.com/ActiveEngagement/mailbox/commit/1e219360dda3cb30ab83773b2de4f11f5c5d5001) Thanks [@actengage](https://github.com/actengage)! - Fix PHP 8.5 compatibility and Laravel 13 support.
+
+  - Bump orchestra/testbench to ^10.0|^11.0 and orchestra/canvas to ^10.0|^11.0 to resolve PHP 8.5 PDO::MYSQL_ATTR_SSL_CA deprecation
+  - Add spatie/laravel-typescript-transformer ^3.0
+  - Add CI test matrix for PHP 8.4/8.5 and Laravel 12/13
+  - Apply Rector rules: scope methods to #[Scope] attribute, arrow function return types
+  - Fix PHPStan errors: type-safe date parsing in FollowupFlag cast
+
 ## 1.0.0
 
 ### Major Changes
