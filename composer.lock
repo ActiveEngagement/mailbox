@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "a8d47c3d3442b0d96c8134dd17b3f3b6",
+    "content-hash": "aaa3f39df291462c6c33c6be65abdefe",
     "packages": [
         {
             "name": "brick/math",
@@ -1406,36 +1406,36 @@
         },
         {
             "name": "kalnoy/nestedset",
-            "version": "v6.0.6",
+            "version": "dev-patch-1",
             "source": {
                 "type": "git",
-                "url": "https://github.com/lazychaser/laravel-nestedset.git",
-                "reference": "3cfc56a9759fb592bc903056166bfc0867f9e679"
+                "url": "https://github.com/sharafat/laravel-nestedset.git",
+                "reference": "9bec443bf44250ec102d977201d22a2fc3fcc340"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/lazychaser/laravel-nestedset/zipball/3cfc56a9759fb592bc903056166bfc0867f9e679",
-                "reference": "3cfc56a9759fb592bc903056166bfc0867f9e679",
+                "url": "https://api.github.com/repos/sharafat/laravel-nestedset/zipball/9bec443bf44250ec102d977201d22a2fc3fcc340",
+                "reference": "9bec443bf44250ec102d977201d22a2fc3fcc340",
                 "shasum": ""
             },
             "require": {
-                "illuminate/database": "^7.0|^8.0|^9.0|^10.0|^11.0|^12.0",
-                "illuminate/events": "^7.0|^8.0|^9.0|^10.0|^11.0|^12.0",
-                "illuminate/support": "^7.0|^8.0|^9.0|^10.0|^11.0|^12.0",
+                "illuminate/database": ">=7.0",
+                "illuminate/events": ">=7.0",
+                "illuminate/support": ">=7.0",
                 "php": "^8.0"
             },
             "require-dev": {
-                "phpunit/phpunit": "7.*|8.*|9.*|^10.5"
+                "phpunit/phpunit": ">=7.0"
             },
             "type": "library",
             "extra": {
+                "branch-alias": {
+                    "dev-master": "v5.0.x-dev"
+                },
                 "laravel": {
                     "providers": [
                         "Kalnoy\\Nestedset\\NestedSetServiceProvider"
                     ]
-                },
-                "branch-alias": {
-                    "dev-master": "v5.0.x-dev"
                 }
             },
             "autoload": {
@@ -1443,7 +1443,11 @@
                     "Kalnoy\\Nestedset\\": "src/"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
+            "scripts": {
+                "test": [
+                    "@php ./vendor/bin/phpunit"
+                ]
+            },
             "license": [
                 "MIT"
             ],
@@ -1462,10 +1466,9 @@
                 "nsm"
             ],
             "support": {
-                "issues": "https://github.com/lazychaser/laravel-nestedset/issues",
-                "source": "https://github.com/lazychaser/laravel-nestedset/tree/v6.0.6"
+                "source": "https://github.com/sharafat/laravel-nestedset/tree/patch-1"
             },
-            "time": "2025-04-22T19:38:02+00:00"
+            "time": "2026-03-21T18:32:19+00:00"
         },
         {
             "name": "laravel/framework",
@@ -12395,9 +12398,18 @@
             "time": "2025-12-08T11:19:18+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "kalnoy/nestedset",
+            "version": "dev-patch-1",
+            "alias": "6.0.6",
+            "alias_normalized": "6.0.6.0"
+        }
+    ],
     "minimum-stability": "stable",
-    "stability-flags": {},
+    "stability-flags": {
+        "kalnoy/nestedset": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {

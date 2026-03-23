@@ -14,7 +14,7 @@
     "require": {
         "php": "^8.4",
         "cardinalby/content-disposition": "^1.1",
-        "kalnoy/nestedset": "^6.0",
+        "kalnoy/nestedset": "dev-patch-1 as 6.0.6",
         "laravel/framework": "^12.0|^13.0",
         "laravel/scout": "^10.13",
         "microsoft/microsoft-graph": "^2.26",
@@ -58,6 +58,12 @@
             }
         }
     },
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/sharafat/laravel-nestedset"
+        }
+    ],
     "config": {
         "allow-plugins": {
             "pestphp/pest-plugin": true,
