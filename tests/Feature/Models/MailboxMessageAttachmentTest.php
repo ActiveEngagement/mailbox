@@ -24,8 +24,8 @@ it('scopes the query by name', function (): void {
     $attachment2 = MailboxMessageAttachment::factory()->create(['name' => 'image.png']);
     $attachment3 = MailboxMessageAttachment::factory()->create(['name' => 'report.pdf']);
 
-    expect(MailboxMessageAttachment::query()->named('report.pdf')->get())->toHaveCount(2);
-    expect(MailboxMessageAttachment::query()->named('image.png')->get())->toHaveCount(1);
+    expect(MailboxMessageAttachment::query()->name('report.pdf')->get())->toHaveCount(2);
+    expect(MailboxMessageAttachment::query()->name('image.png')->get())->toHaveCount(1);
 });
 
 it('returns file contents from storage', function (): void {

@@ -141,7 +141,7 @@ class AttachmentService
         );
 
         $filename = $disposition->getFilename() ?? '';
-        $existing = $message->attachments()->named($filename)->first();
+        $existing = $message->attachments()->name($filename)->first();
 
         if ($existing instanceof MailboxMessageAttachment) {
             return $existing;
@@ -180,7 +180,7 @@ class AttachmentService
     public function createFromAttachment(MailboxMessage $message, Attachment $attachment): MailboxMessageAttachment
     {
         $name = (string) $attachment->getName();
-        $existing = $message->attachments()->named($name)->first();
+        $existing = $message->attachments()->name($name)->first();
 
         if ($existing instanceof MailboxMessageAttachment) {
             return $existing;
