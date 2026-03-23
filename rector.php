@@ -6,6 +6,7 @@ use Rector\Caching\ValueObject\Storage\FileCacheStorage;
 use Rector\Config\RectorConfig;
 use Rector\Php83\Rector\ClassMethod\AddOverrideAttributeToOverriddenMethodsRector;
 use Rector\TypeDeclaration\Rector\StmtsAwareInterface\DeclareStrictTypesRector;
+use RectorLaravel\Rector\ClassMethod\ScopeNamedClassMethodToScopeAttributedClassMethodRector;
 use RectorLaravel\Set\LaravelSetList;
 use RectorLaravel\Set\LaravelSetProvider;
 
@@ -45,4 +46,10 @@ return RectorConfig::configure()
     ->withRules([
         DeclareStrictTypesRector::class,
         AddOverrideAttributeToOverriddenMethodsRector::class,
+    ])
+    ->withSkip([
+        // scopeName must stay as-is: #[Scope] name() conflicts with the 'name' column attribute in Laravel 13
+        ScopeNamedClassMethodToScopeAttributedClassMethodRector::class => [
+            __DIR__.'/src/Models/MailboxMessageAttachment.php',
+        ],
     ]);

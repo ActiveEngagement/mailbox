@@ -11,7 +11,6 @@ use Actengage\Mailbox\Events\MailboxMessageAttachmentUpdated;
 use Actengage\Mailbox\Support\BroadcastsEventsToOthers;
 use Database\Factories\MailboxMessageAttachmentFactory;
 use Illuminate\Broadcasting\Channel;
-use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -142,8 +141,7 @@ class MailboxMessageAttachment extends Model
      *
      * @param  Builder<MailboxMessageAttachment>  $query
      */
-    #[Scope]
-    protected function name(Builder $query, string ...$name): void
+    protected function scopeName(Builder $query, string ...$name): void
     {
         $query->whereIn('name', $name);
     }
