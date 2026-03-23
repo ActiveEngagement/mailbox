@@ -13,6 +13,7 @@ use Actengage\Mailbox\Support\BroadcastsEventsToOthers;
 use Database\Factories\MailboxFolderFactory;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
+use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -132,7 +133,8 @@ class MailboxFolder extends Model
      *
      * @param  Builder<MailboxFolder>  $query
      */
-    protected function scopeFolder(Builder $query, MailboxFolder|string ...$folder): void
+    #[Scope]
+    protected function folder(Builder $query, MailboxFolder|string ...$folder): void
     {
         $query->whereIn('id', collect($folder)->map(fn (MailboxFolder|string $folder): mixed => $folder instanceof MailboxFolder ? $folder->getKey() : $folder));
     }
@@ -152,7 +154,8 @@ class MailboxFolder extends Model
      *
      * @param  Builder<MailboxFolder>  $query
      */
-    protected function scopeExternalId(Builder $query, MailboxFolder|string ...$folder): void
+    #[Scope]
+    protected function externalId(Builder $query, MailboxFolder|string ...$folder): void
     {
         $query->whereIn('external_id', collect($folder)->map(fn (MailboxFolder|string $folder): string => $folder instanceof MailboxFolder ? $folder->external_id : $folder));
     }

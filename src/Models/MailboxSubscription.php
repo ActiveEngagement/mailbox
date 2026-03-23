@@ -12,6 +12,7 @@ use Actengage\Mailbox\Observers\MailboxSubscriptionObserver;
 use Actengage\Mailbox\Support\BroadcastsEventsToOthers;
 use DateTime;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
+use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -105,7 +106,8 @@ class MailboxSubscription extends Model
      *
      * @param  Builder<MailboxSubscription>  $query
      */
-    protected function scopeExpiresAt(Builder $query, DateTime $expiresAt): void
+    #[Scope]
+    protected function expiresAt(Builder $query, DateTime $expiresAt): void
     {
         $query->where('expires_at', '<=', $expiresAt);
     }

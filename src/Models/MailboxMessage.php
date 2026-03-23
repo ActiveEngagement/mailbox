@@ -20,6 +20,7 @@ use Actengage\Mailbox\Events\MailboxMessageUpdated;
 use Actengage\Mailbox\Support\BroadcastsEventsToOthers;
 use Database\Factories\MailboxMessageFactory;
 use Illuminate\Broadcasting\Channel;
+use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -234,7 +235,8 @@ class MailboxMessage extends Model
      *
      * @param  Builder<MailboxMessage>  $query
      */
-    protected function scopeExternalId(Builder $query, MailboxMessage|string ...$message): void
+    #[Scope]
+    protected function externalId(Builder $query, MailboxMessage|string ...$message): void
     {
         $query->whereIn('external_id', collect($message)->map(fn (MailboxMessage|string $message): string => $message instanceof MailboxMessage ? $message->external_id : $message));
     }
@@ -244,7 +246,8 @@ class MailboxMessage extends Model
      *
      * @param  Builder<MailboxMessage>  $query
      */
-    protected function scopeConversation(Builder $query, MailboxMessage|string ...$message): void
+    #[Scope]
+    protected function conversation(Builder $query, MailboxMessage|string ...$message): void
     {
         $query->whereIn('conversation_id', collect($message)->map(fn (MailboxMessage|string $message): string => $message instanceof MailboxMessage ? (string) $message->conversation_id : $message));
     }
@@ -254,7 +257,8 @@ class MailboxMessage extends Model
      *
      * @param  Builder<MailboxMessage>  $query
      */
-    protected function scopeMessage(Builder $query, MailboxMessage|string|int ...$message): void
+    #[Scope]
+    protected function message(Builder $query, MailboxMessage|string|int ...$message): void
     {
         $query->whereIn('id', collect($message)->map(fn (MailboxMessage|string|int $message): mixed => $message instanceof MailboxMessage ? $message->getKey() : $message));
     }

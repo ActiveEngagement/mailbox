@@ -6,8 +6,10 @@ namespace Actengage\Mailbox\Casts;
 
 use Actengage\Mailbox\Data\FollowupFlag as FollowupFlagData;
 use Actengage\Mailbox\Enums\FollowupFlagStatus;
+use DateTimeInterface;
 use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Date;
 use Microsoft\Graph\Generated\Models\FollowupFlag as BaseFollowupFlag;
 
@@ -25,9 +27,9 @@ class FollowupFlag implements CastsAttributes
     {
         return FollowupFlagData::from([
             'status' => $value ?? FollowupFlagStatus::NotFlagged,
-            'startDateTime' => isset($attributes['started_at']) && $attributes['started_at'] ? Date::parse($attributes['started_at']) : null,
-            'dueDateTime' => isset($attributes['due_at']) && $attributes['due_at'] ? Date::parse($attributes['due_at']) : null,
-            'completedDateTime' => isset($attributes['completed_at']) && $attributes['completed_at'] ? Date::parse($attributes['completed_at']) : null,
+            'startDateTime' => $this->parseDate($attributes['started_at'] ?? null),
+            'dueDateTime' => $this->parseDate($attributes['due_at'] ?? null),
+            'completedDateTime' => $this->parseDate($attributes['completed_at'] ?? null),
         ]);
     }
 
@@ -50,6 +52,19 @@ class FollowupFlag implements CastsAttributes
                 'due_at' => $value->dueDateTime,
                 'completed_at' => $value->completedDateTime,
             ];
+        }
+
+        return null;
+    }
+
+    private function parseDate(mixed $value): ?Carbon
+    {
+        if ($value instanceof DateTimeInterface) {
+            return Date::parse($value);
+        }
+
+        if (\is_string($value) && $value !== '') {
+            return Date::parse($value);
         }
 
         return null;

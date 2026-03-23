@@ -6,7 +6,7 @@ on:
     branches: [main]
 
 jobs:
-  setup:
+  pint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -15,37 +15,13 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: 8.4
-
-      - name: Cache Composer dependencies
-        uses: actions/cache@v4
-        with:
-          path: vendor
-          key: composer-${{ hashFiles('composer.lock') }}
 
       - name: Install dependencies
         run: composer install --no-interaction --prefer-dist
 
-  pint:
-    needs: setup
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: 8.4
-
-      - name: Restore Composer cache
-        uses: actions/cache@v4
-        with:
-          path: vendor
-          key: composer-${{ hashFiles('composer.lock') }}
-
       - run: vendor/bin/pint --test
 
   phpstan:
-    needs: setup
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -55,16 +31,12 @@ jobs:
         with:
           php-version: 8.4
 
-      - name: Restore Composer cache
-        uses: actions/cache@v4
-        with:
-          path: vendor
-          key: composer-${{ hashFiles('composer.lock') }}
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist
 
       - run: vendor/bin/phpstan analyse --no-progress
 
   rector:
-    needs: setup
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -74,30 +46,31 @@ jobs:
         with:
           php-version: 8.4
 
-      - name: Restore Composer cache
-        uses: actions/cache@v4
-        with:
-          path: vendor
-          key: composer-${{ hashFiles('composer.lock') }}
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist
 
       - run: vendor/bin/rector --dry-run --no-progress-bar
 
   pest:
-    needs: setup
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+      matrix:
+        php: ['8.4', '8.5']
+        laravel: ['12.*', '13.*']
+    name: PHP ${{ matrix.php }} / Laravel ${{ matrix.laravel }}
     steps:
       - uses: actions/checkout@v4
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: 8.4
+          php-version: ${{ matrix.php }}
           coverage: xdebug
 
-      - name: Restore Composer cache
-        uses: actions/cache@v4
-        with:
-          path: vendor
-          key: composer-${{ hashFiles('composer.lock') }}
+      - name: Install dependencies
+        run: |
+          composer require laravel/framework:${{ matrix.laravel }} --no-interaction --no-update
+          composer update --no-interaction --prefer-dist
 
       - run: vendor/bin/pest --coverage --min=100
