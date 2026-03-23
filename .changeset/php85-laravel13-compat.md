@@ -1,5 +1,5 @@
 ---
-"actengage/mailbox": patch
+"mailbox": patch
 ---
 
 Fix PHP 8.5 and Laravel 13 compatibility.
