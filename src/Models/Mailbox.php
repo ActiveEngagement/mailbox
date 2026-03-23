@@ -11,6 +11,7 @@ use Actengage\Mailbox\Events\MailboxUpdated;
 use Actengage\Mailbox\Support\BroadcastsEventsToOthers;
 use Database\Factories\MailboxFactory;
 use Illuminate\Broadcasting\Channel;
+use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -104,7 +105,8 @@ class Mailbox extends Model
      *
      * @param  Builder<Mailbox>  $query
      */
-    protected function scopeEmail(Builder $query, Mailbox|string ...$email): void
+    #[Scope]
+    protected function email(Builder $query, Mailbox|string ...$email): void
     {
         $query->whereIn('email', collect($email)->map(fn (Mailbox|string $mailbox): string => $mailbox instanceof Mailbox ? $mailbox->email : $mailbox));
     }
@@ -114,7 +116,8 @@ class Mailbox extends Model
      *
      * @param  Builder<Mailbox>  $query
      */
-    protected function scopeMailbox(Builder $query, Mailbox|string ...$mailbox): void
+    #[Scope]
+    protected function mailbox(Builder $query, Mailbox|string ...$mailbox): void
     {
         $query->whereIn('id', collect($mailbox)->map(fn (Mailbox|string $mailbox): mixed => $mailbox instanceof Mailbox ? $mailbox->getKey() : $mailbox));
     }

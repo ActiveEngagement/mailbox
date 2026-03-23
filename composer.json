@@ -14,13 +14,13 @@
     "require": {
         "php": "^8.4",
         "cardinalby/content-disposition": "^1.1",
-        "kalnoy/nestedset": "^6.0",
-        "laravel/framework": "^11.0|^12.0|^13.0",
+        "kalnoy/nestedset": "dev-patch-1 as 6.0.6",
+        "laravel/framework": "^12.0|^13.0",
         "laravel/scout": "^10.13",
         "microsoft/microsoft-graph": "^2.26",
         "php-http/promise": "^1.2",
         "spatie/laravel-data": "^4.13",
-        "spatie/laravel-typescript-transformer": "^2.5"
+        "spatie/laravel-typescript-transformer": "^3.0"
     },
     "require-dev": {
         "driftingly/rector-laravel": "^2.1",
@@ -28,10 +28,10 @@
         "laravel/pint": "^1.8",
         "larastan/larastan": "^3.3",
         "mockery/mockery": "^1.6",
-        "orchestra/canvas": "^9.2",
-        "orchestra/testbench": "^9.5",
-        "pestphp/pest": "^3.7",
-        "pestphp/pest-plugin-laravel": "^3.0",
+        "orchestra/canvas": "^10.0|^11.0",
+        "orchestra/testbench": "^10.0|^11.0",
+        "pestphp/pest": "^4.0",
+        "pestphp/pest-plugin-laravel": "^4.0",
         "rector/rector": "^2.3"
     },
     "autoload": {
@@ -58,6 +58,12 @@
             }
         }
     },
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/sharafat/laravel-nestedset"
+        }
+    ],
     "config": {
         "allow-plugins": {
             "pestphp/pest-plugin": true,
