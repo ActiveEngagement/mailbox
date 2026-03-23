@@ -171,6 +171,14 @@ class MailboxFolder extends Model
     }
 
     /**
+     * Override NodeTrait to avoid re-entrant boot on Laravel 13.
+     */
+    public static function usesSoftDelete(): bool
+    {
+        return false;
+    }
+
+    /**
      * Create a new factory.
      */
     protected static function newFactory(): MailboxFolderFactory
