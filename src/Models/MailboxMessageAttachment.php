@@ -143,7 +143,7 @@ class MailboxMessageAttachment extends Model
      * @param  Builder<MailboxMessageAttachment>  $query
      */
     #[Scope]
-    protected function name(Builder $query, string ...$name): void
+    protected function named(Builder $query, string ...$name): void
     {
         $query->whereIn('name', $name);
     }
