@@ -5,7 +5,11 @@ user_invocable: true
 
 # Create a Changeset
 
-Create a changeset file for the current changes using `pnpm changeset`. This skill determines the correct semver bump level and writes the changeset non-interactively.
+Create a changeset file for the current changes. This skill determines the correct semver bump level and writes the changeset non-interactively.
+
+## Important
+
+The package name in the changeset **must** match the `name` field in `package.json`. For this project, the package name is **`mailbox`** (NOT `actengage/mailbox` from composer.json).
 
 ## Steps
 
@@ -23,7 +27,7 @@ A change is **major** if it can cause existing consumers of this package to brea
 
 - Removing or renaming a public method, class, trait, or config key
 - Changing the signature of a public method (removing params, changing types, changing return types)
-- Changing default behavior that consumers rely on (e.g. slug separator changes from `-` to `_`)
+- Changing default behavior that consumers rely on
 - Dropping support for a PHP version (e.g. removing `^8.2` from `composer.json` `require.php`)
 - **Any change to `laravel/framework` major version support** — this includes adding a new major version (e.g. adding `^12.0`), dropping an old one, or both. This is **always major** regardless of whether old versions are retained, because it signals a new compatibility baseline for consumers.
 
@@ -39,8 +43,8 @@ A change is **minor** if it adds new capability without breaking existing usage.
 
 A change is **patch** if it fixes incorrect behavior without adding new features or breaking anything. Examples:
 
-- Fixing a bug in slug generation
-- Fixing an edge case in unique slug resolution
+- Fixing a bug
+- Fixing an edge case
 - Correcting type hints that were wrong
 - Internal refactoring that does not change public API or behavior
 - Updating dev dependencies (test tools, linters)
@@ -48,24 +52,20 @@ A change is **patch** if it fixes incorrect behavior without adding new features
 
 ### 3. Write the changeset
 
-Run the following command, replacing `<bump>` with `major`, `minor`, or `patch`, and `<summary>` with a concise description of what changed and why:
-
-```bash
-pnpm changeset add --message "<summary>" -- --package actengage-sluggable --type <bump>
-```
-
-If the above non-interactive approach does not work, create the changeset file manually:
+Create the changeset file manually:
 
 1. Generate a random lowercase kebab-case name (e.g. `bright-dogs-smile`)
 2. Write the file to `.changeset/<name>.md`:
 
 ```markdown
 ---
-"actengage-sluggable": <bump>
+"mailbox": <bump>
 ---
 
 <summary>
 ```
+
+**CRITICAL**: The package name MUST be `"mailbox"` — this matches `package.json`. Do NOT use the composer package name `actengage/mailbox`.
 
 ### 4. Verify
 

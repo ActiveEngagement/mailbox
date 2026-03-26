@@ -1,5 +1,5 @@
 ---
-"actengage/mailbox": patch
+"mailbox": patch
 ---
 
 Fix TypeError when attachment contentBytes is a Guzzle Stream instead of a string.
