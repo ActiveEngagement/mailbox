@@ -1,5 +1,13 @@
 # [1.0.0-beta.10](https://github.com/ActiveEngagement/casey-jones-client/compare/v1.0.0-beta.9...v1.0.0-beta.10) (2024-12-19)
 
+## 1.0.3
+
+### Patch Changes
+
+- [#8](https://github.com/ActiveEngagement/mailbox/pull/8) [`3dff389`](https://github.com/ActiveEngagement/mailbox/commit/3dff38952056a24ad5f5d57000e65af12638205d) Thanks [@actengage](https://github.com/actengage)! - Fix TypeError when attachment contentBytes is a Guzzle Stream instead of a string.
+
+  - Handle `Psr\Http\Message\StreamInterface` in `AttachmentService::createFromAttachment()` by converting to string before base64 decoding
+
 ## 1.0.2
 
 ### Patch Changes
