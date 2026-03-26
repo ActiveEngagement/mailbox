@@ -8,6 +8,7 @@ use Actengage\Mailbox\Models\MailboxMessageAttachment;
 use Actengage\Mailbox\Services\AttachmentService;
 use Actengage\Mailbox\Services\ClientService;
 use cardinalby\ContentDisposition\ContentDisposition;
+use GuzzleHttp\Psr7\Utils;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Http;
@@ -338,6 +339,55 @@ it('creates an attachment from Graph API Attachment model', function (): void {
 
     Storage::disk('local')->assertExists($model->path);
 });
+
+it('creates an attachment from Graph API Attachment with StreamInterface contentBytes', function (): void {
+    Storage::fake('local');
+
+    $mailbox = Mailbox::factory()->create();
+    $message = MailboxMessage::factory()->create([
+        'mailbox_id' => $mailbox->id,
+    ]);
+
+    $attachment = new Attachment;
+    $attachment->setName('stream-file.pdf');
+    $attachment->setContentType('application/pdf');
+    $attachment->setSize(2048);
+    $attachment->setLastModifiedDateTime(new DateTime('2025-01-01T00:00:00Z'));
+    $attachment->getBackingStore()->set('contentBytes', Utils::streamFor(base64_encode('stream content')));
+
+    $clientService = Mockery::mock(ClientService::class);
+    $clientService->shouldReceive('config')->with('storage_disk', 'local')->andReturn('local');
+    $clientService->shouldReceive('config')->with('storage_visibility', 'private')->andReturn('private');
+
+    $service = new AttachmentService($clientService);
+    $model = $service->createFromAttachment($message, $attachment);
+
+    expect($model)->toBeInstanceOf(MailboxMessageAttachment::class);
+    expect($model->name)->toBe('stream-file.pdf');
+    expect($model->exists)->toBeTrue();
+
+    Storage::disk('local')->assertExists($model->path);
+});
+
+it('throws UnexpectedValueException when contentBytes is not a string or StreamInterface', function (): void {
+    $mailbox = Mailbox::factory()->create();
+    $message = MailboxMessage::factory()->create([
+        'mailbox_id' => $mailbox->id,
+    ]);
+
+    $attachment = new Attachment;
+    $attachment->setName('bad-file.pdf');
+    $attachment->setContentType('application/pdf');
+    $attachment->setSize(512);
+    $attachment->setLastModifiedDateTime(new DateTime('2025-01-01T00:00:00Z'));
+    $attachment->getBackingStore()->set('contentBytes', 12345);
+
+    $clientService = Mockery::mock(ClientService::class);
+    $clientService->shouldReceive('config')->with('storage_disk', 'local')->andReturn('local');
+
+    $service = new AttachmentService($clientService);
+    $service->createFromAttachment($message, $attachment);
+})->throws(UnexpectedValueException::class);
 
 it('returns existing attachment when creating from Graph API Attachment', function (): void {
     $mailbox = Mailbox::factory()->create();
