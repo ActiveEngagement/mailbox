@@ -17,6 +17,8 @@ use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Microsoft\Graph\Generated\Models\Attachment;
+use Psr\Http\Message\StreamInterface;
+use UnexpectedValueException;
 
 class AttachmentService
 {
@@ -188,8 +190,16 @@ class AttachmentService
 
         /** @var string $disk */
         $disk = $this->client->config('storage_disk', 'local');
-        /** @var string $contentBytes */
         $contentBytes = $attachment->getBackingStore()->get('contentBytes');
+
+        if ($contentBytes instanceof StreamInterface) {
+            $contentBytes = $contentBytes->getContents();
+        }
+
+        if (! \is_string($contentBytes)) {
+            throw new UnexpectedValueException('Expected contentBytes to be a string or StreamInterface, got '.\get_debug_type($contentBytes));
+        }
+
         $contents = base64_decode($contentBytes);
         $path = $message->attachmentRelativePath($name);
 
