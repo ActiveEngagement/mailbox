@@ -9,6 +9,7 @@ use Actengage\Mailbox\Events\MailboxMessageAttachmentDeleted;
 use Actengage\Mailbox\Events\MailboxMessageAttachmentDeleting;
 use Actengage\Mailbox\Events\MailboxMessageAttachmentUpdated;
 use Actengage\Mailbox\Support\BroadcastsEventsToOthers;
+use Actengage\Mailbox\Support\UsesMailboxConnection;
 use Database\Factories\MailboxMessageAttachmentFactory;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Database\Eloquent\Builder;
@@ -65,6 +66,7 @@ class MailboxMessageAttachment extends Model
     use HasFactory;
 
     use Searchable;
+    use UsesMailboxConnection;
 
     /**
      * The attributes that are mass assignable.

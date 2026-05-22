@@ -4,6 +4,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Database Connection
+    |--------------------------------------------------------------------------
+    |
+    | This value determines which database connection the mailbox models and
+    | migrations use. When null, the application's default connection is
+    | used, preserving the prior behavior.
+    |
+    */
+
+    'database_connection' => env('MAILBOX_DB_CONNECTION'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Default Connection
     |--------------------------------------------------------------------------
     |

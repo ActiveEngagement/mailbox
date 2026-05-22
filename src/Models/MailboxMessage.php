@@ -18,6 +18,7 @@ use Actengage\Mailbox\Events\MailboxMessageDeleted;
 use Actengage\Mailbox\Events\MailboxMessageDeleting;
 use Actengage\Mailbox\Events\MailboxMessageUpdated;
 use Actengage\Mailbox\Support\BroadcastsEventsToOthers;
+use Actengage\Mailbox\Support\UsesMailboxConnection;
 use Database\Factories\MailboxMessageFactory;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Database\Eloquent\Attributes\Scope;
@@ -106,6 +107,7 @@ class MailboxMessage extends Model
     use HasFactory;
 
     use Searchable;
+    use UsesMailboxConnection;
 
     /**
      * The attributes that are mass assignable.
