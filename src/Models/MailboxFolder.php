@@ -10,6 +10,7 @@ use Actengage\Mailbox\Events\MailboxFolderDeleting;
 use Actengage\Mailbox\Events\MailboxFolderUpdated;
 use Actengage\Mailbox\Observers\MailboxFolderObserver;
 use Actengage\Mailbox\Support\BroadcastsEventsToOthers;
+use Actengage\Mailbox\Support\UsesMailboxConnection;
 use Database\Factories\MailboxFolderFactory;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
@@ -61,6 +62,7 @@ class MailboxFolder extends Model
     use HasFactory;
 
     use NodeTrait;
+    use UsesMailboxConnection;
 
     /**
      * The attributes that are mass assignable.

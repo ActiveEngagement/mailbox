@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('mailbox_messages', function (Blueprint $table): void {
+        Schema::connection(config('mailbox.database_connection'))->table('mailbox_messages', function (Blueprint $table): void {
             $table->index(['mailbox_id', 'folder_id', 'is_read']);
             $table->index(['mailbox_id', 'folder_id', 'flag']);
         });
@@ -16,7 +16,7 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::table('mailbox_messages', function (Blueprint $table): void {
+        Schema::connection(config('mailbox.database_connection'))->table('mailbox_messages', function (Blueprint $table): void {
             $table->dropIndex(['mailbox_id', 'folder_id', 'is_read']);
             $table->dropIndex(['mailbox_id', 'folder_id', 'flag']);
         });

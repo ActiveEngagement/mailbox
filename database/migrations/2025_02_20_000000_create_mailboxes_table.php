@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('mailboxes', function (Blueprint $table): void {
+        Schema::connection(config('mailbox.database_connection'))->create('mailboxes', function (Blueprint $table): void {
             $table->integerIncrements('id');
             $table->string('email')->unique();
             $table->string('connection');
@@ -24,6 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('mailboxes');
+        Schema::connection(config('mailbox.database_connection'))->dropIfExists('mailboxes');
     }
 };

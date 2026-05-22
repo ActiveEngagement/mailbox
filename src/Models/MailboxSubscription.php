@@ -10,6 +10,7 @@ use Actengage\Mailbox\Events\MailboxSubscriptionDeleting;
 use Actengage\Mailbox\Events\MailboxSubscriptionUpdated;
 use Actengage\Mailbox\Observers\MailboxSubscriptionObserver;
 use Actengage\Mailbox\Support\BroadcastsEventsToOthers;
+use Actengage\Mailbox\Support\UsesMailboxConnection;
 use DateTime;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Attributes\Scope;
@@ -50,6 +51,7 @@ use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 class MailboxSubscription extends Model
 {
     use BroadcastsEventsToOthers;
+    use UsesMailboxConnection;
 
     /**
      * The attributes that are mass assignable.

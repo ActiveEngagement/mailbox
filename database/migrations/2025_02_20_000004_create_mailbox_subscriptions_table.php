@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('mailbox_subscriptions', function (Blueprint $table): void {
+        Schema::connection(config('mailbox.database_connection'))->create('mailbox_subscriptions', function (Blueprint $table): void {
             $table->id();
             $table->integer('mailbox_id')->unsigned();
             $table->foreign('mailbox_id')->references('id')->on('mailboxes')->cascadeOnDelete()->cascadeOnUpdate();
@@ -31,6 +31,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('mailbox_subscriptions');
+        Schema::connection(config('mailbox.database_connection'))->dropIfExists('mailbox_subscriptions');
     }
 };
