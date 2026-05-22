@@ -1,5 +1,13 @@
 # [1.0.0-beta.10](https://github.com/ActiveEngagement/casey-jones-client/compare/v1.0.0-beta.9...v1.0.0-beta.10) (2024-12-19)
 
+## 1.1.0
+
+### Minor Changes
+
+- [#12](https://github.com/ActiveEngagement/mailbox/pull/12) [`470bd50`](https://github.com/ActiveEngagement/mailbox/commit/470bd5003ab31247066cf5b2909198c6932c74fd) Thanks [@actengage](https://github.com/actengage)! - Allow mailbox models and migrations to run on a non-default database connection via the new `mailbox.database_connection` config (`MAILBOX_DB_CONNECTION` env). Defaults to `null`, which uses the application's default connection — backwards compatible with existing installs.
+
+- [#12](https://github.com/ActiveEngagement/mailbox/pull/12) [`b375763`](https://github.com/ActiveEngagement/mailbox/commit/b3757630c4d44cbce6516f1ea2ab8be61db70d37) Thanks [@actengage](https://github.com/actengage)! - Add performance indexes to mailbox tables: `message_id` index on `mailbox_message_attachments` and composite `(mailbox_id, folder_id, conversation_id, is_draft)` index on `mailbox_messages`
+
 ## 1.0.3
 
 ### Patch Changes
