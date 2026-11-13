@@ -41,6 +41,6 @@ class CreateMessage implements ShouldQueue
             $model = Messages::save($this->mailbox, $message);
 
             Attachments::processUrlsAsAttachments($model);
-        });
+        })->wait();
     }
 }

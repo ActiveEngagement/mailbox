@@ -48,3 +48,22 @@ it('handles null message from promise', function (): void {
 
     new CreateMessage($mailbox, 'ext-id')->handle();
 });
+
+it('fails the job when saving the message throws', function (): void {
+    $mailbox = Mailbox::factory()->create();
+    $graphMessage = new Message;
+
+    Client::shouldReceive('connect')->with($mailbox->connection)->once();
+
+    Messages::shouldReceive('find')
+        ->with($mailbox->email, 'ext-id')
+        ->andReturn(new FulfilledPromise($graphMessage));
+
+    Messages::shouldReceive('save')
+        ->with($mailbox, $graphMessage)
+        ->andThrow(new RuntimeException('Save failed'));
+
+    Attachments::shouldReceive('processUrlsAsAttachments')->never();
+
+    new CreateMessage($mailbox, 'ext-id')->handle();
+})->throws(RuntimeException::class, 'Save failed');

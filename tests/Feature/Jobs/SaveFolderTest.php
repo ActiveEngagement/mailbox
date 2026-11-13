@@ -44,19 +44,16 @@ it('handles null folder from promise', function (): void {
     new SaveFolder($mailbox, 'folder-ext-id')->handle();
 });
 
-it('invokes rejection handler when promise is rejected', function (): void {
+it('fails the job when the promise is rejected', function (): void {
     $mailbox = Mailbox::factory()->create();
 
     Client::shouldReceive('connect')->with($mailbox->connection)->once();
 
-    $exception = new RuntimeException('Graph API error');
-
     Folders::shouldReceive('find')
         ->with($mailbox->email, 'folder-ext-id')
-        ->andReturn(new RejectedPromise($exception));
+        ->andReturn(new RejectedPromise(new RuntimeException('Graph API error')));
 
     Folders::shouldReceive('save')->never();
 
-    // The rejection handler throws, but the promise catches it internally
     new SaveFolder($mailbox, 'folder-ext-id')->handle();
-});
+})->throws(RuntimeException::class, 'Graph API error');

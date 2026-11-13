@@ -18,6 +18,8 @@ use Microsoft\Graph\Generated\Users\Item\MailFolders\Item\MailFolderItemRequestB
 use Microsoft\Graph\Generated\Users\Item\MailFolders\Item\MailFolderItemRequestBuilderGetRequestConfiguration;
 use Microsoft\Graph\Generated\Users\Item\MailFolders\MailFoldersRequestBuilderGetQueryParameters;
 use Microsoft\Graph\Generated\Users\Item\MailFolders\MailFoldersRequestBuilderGetRequestConfiguration;
+use Microsoft\Kiota\Abstractions\ApiException;
+use Throwable;
 
 class FolderService
 {
@@ -44,7 +46,8 @@ class FolderService
             ->byUserId($mailbox instanceof Mailbox ? $mailbox->email : $mailbox)
             ->mailFolders()
             ->byMailFolderId($folderId)
-            ->get($config);
+            ->get($config)
+            ->then(null, fn (Throwable $e): null => $e instanceof ApiException && $e->getResponseStatusCode() === 404 ? null : throw $e);
     }
 
     /**
