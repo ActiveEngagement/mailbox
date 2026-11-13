@@ -12,6 +12,7 @@ use Actengage\Mailbox\Facades\Models;
 use Actengage\Mailbox\Models\Mailbox;
 use Actengage\Mailbox\Models\MailboxFolder;
 use Actengage\Mailbox\Models\MailboxMessage;
+use Actengage\Mailbox\Models\MailboxMessageAttachment;
 use Exception;
 use Http\Promise\Promise;
 use Illuminate\Support\Collection;
@@ -20,6 +21,7 @@ use Microsoft\Graph\Core\Requests\BatchRequestContent;
 use Microsoft\Graph\Core\Requests\BatchResponseContent;
 use Microsoft\Graph\Core\Requests\BatchResponseItem;
 use Microsoft\Graph\Core\Tasks\PageIterator;
+use Microsoft\Graph\Generated\Models\FileAttachment;
 use Microsoft\Graph\Generated\Models\MailFolder;
 use Microsoft\Graph\Generated\Models\Message;
 use Microsoft\Graph\Generated\Models\MessageCollectionResponse;
@@ -32,8 +34,10 @@ use Microsoft\Graph\Generated\Users\Item\Messages\Item\MessageItemRequestBuilder
 use Microsoft\Graph\Generated\Users\Item\Messages\Item\Move\MovePostRequestBody;
 use Microsoft\Graph\Generated\Users\Item\Messages\MessagesRequestBuilderGetQueryParameters;
 use Microsoft\Graph\Generated\Users\Item\Messages\MessagesRequestBuilderGetRequestConfiguration;
+use Microsoft\Kiota\Abstractions\ApiException;
 use Microsoft\Kiota\Abstractions\RequestInformation;
 use Psr\Http\Message\StreamInterface;
+use Throwable;
 
 class MessageService
 {
@@ -58,7 +62,8 @@ class MessageService
                 queryParameters: new MessageItemRequestBuilderGetQueryParameters(
                     expand: ['attachments']
                 )
-            ));
+            ))
+            ->then(null, fn (Throwable $e): null => $e instanceof ApiException && $e->getResponseStatusCode() === 404 ? null : throw $e);
     }
 
     /**
@@ -363,9 +368,9 @@ class MessageService
         $model->save();
 
         if ($message->getHasAttachments()) {
-            foreach ((array) $message->getAttachments() as $attachment) {
-                Attachments::createFromAttachment($model, $attachment);
-            }
+            collect($message->getAttachments() ?? [])
+                ->whereInstanceOf(FileAttachment::class)
+                ->each(fn (FileAttachment $attachment): MailboxMessageAttachment => Attachments::createFromAttachment($model, $attachment));
         }
 
         return $model;

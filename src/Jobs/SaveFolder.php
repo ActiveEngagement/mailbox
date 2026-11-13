@@ -10,7 +10,6 @@ use Actengage\Mailbox\Models\Mailbox;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Microsoft\Graph\Generated\Models\MailFolder;
-use Throwable;
 
 class SaveFolder implements ShouldQueue
 {
@@ -39,8 +38,6 @@ class SaveFolder implements ShouldQueue
             }
 
             Folders::save($this->mailbox, $folder);
-        }, function (Throwable $e): void {
-            throw $e;
-        });
+        })->wait();
     }
 }

@@ -6,9 +6,11 @@ use Actengage\Mailbox\Services\ClientService;
 use Actengage\Mailbox\Services\FolderService;
 use Http\Promise\FulfilledPromise;
 use Http\Promise\Promise;
+use Http\Promise\RejectedPromise;
 use Illuminate\Support\Collection;
 use Microsoft\Graph\Generated\Models\MailFolder;
 use Microsoft\Graph\Generated\Models\MailFolderCollectionResponse;
+use Microsoft\Graph\Generated\Models\ODataErrors\ODataError;
 use Microsoft\Graph\Generated\Users\Item\MailFolders\Item\ChildFolders\ChildFoldersRequestBuilder;
 use Microsoft\Graph\Generated\Users\Item\MailFolders\Item\MailFolderItemRequestBuilder;
 use Microsoft\Graph\Generated\Users\Item\MailFolders\MailFoldersRequestBuilder;
@@ -143,6 +145,33 @@ it('finds a folder using the Graph API', function (): void {
 
     expect($result)->toBeInstanceOf(Promise::class);
     expect($result->wait())->toBe($graphFolder);
+});
+
+it('resolves null when the folder is not found', function (): void {
+    $error = new ODataError;
+    $error->setResponseStatusCode(404);
+
+    $folderItemBuilder = Mockery::mock(MailFolderItemRequestBuilder::class);
+    $folderItemBuilder->shouldReceive('get')->once()->andReturn(new RejectedPromise($error));
+
+    $foldersBuilder = Mockery::mock(MailFoldersRequestBuilder::class);
+    $foldersBuilder->shouldReceive('byMailFolderId')->with('folder-id')->once()->andReturn($folderItemBuilder);
+
+    $userBuilder = Mockery::mock(UserItemRequestBuilder::class);
+    $userBuilder->shouldReceive('mailFolders')->once()->andReturn($foldersBuilder);
+
+    $usersBuilder = Mockery::mock(UsersRequestBuilder::class);
+    $usersBuilder->shouldReceive('byUserId')->with('user@test.com')->once()->andReturn($userBuilder);
+
+    $client = Mockery::mock(GraphServiceClient::class);
+    $client->shouldReceive('users')->once()->andReturn($usersBuilder);
+
+    $clientService = Mockery::mock(ClientService::class);
+    $clientService->shouldReceive('client')->once()->andReturn($client);
+
+    $service = new FolderService($clientService);
+
+    expect($service->find('user@test.com', 'folder-id')->wait())->toBeNull();
 });
 
 it('finds a folder by string email', function (): void {

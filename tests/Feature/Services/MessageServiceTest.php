@@ -10,21 +10,25 @@ use Actengage\Mailbox\Services\ClientService;
 use Actengage\Mailbox\Services\MessageService;
 use GuzzleHttp\Psr7\Utils;
 use Http\Promise\FulfilledPromise;
+use Http\Promise\RejectedPromise;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Storage;
 use Microsoft\Graph\Core\Requests\BatchResponseContent;
 use Microsoft\Graph\Core\Requests\BatchResponseItem;
-use Microsoft\Graph\Generated\Models\Attachment;
 use Microsoft\Graph\Generated\Models\BodyType;
 use Microsoft\Graph\Generated\Models\EmailAddress;
+use Microsoft\Graph\Generated\Models\FileAttachment;
 use Microsoft\Graph\Generated\Models\FollowupFlag;
 use Microsoft\Graph\Generated\Models\FollowupFlagStatus;
 use Microsoft\Graph\Generated\Models\InternetMessageHeader;
+use Microsoft\Graph\Generated\Models\ItemAttachment;
 use Microsoft\Graph\Generated\Models\ItemBody;
 use Microsoft\Graph\Generated\Models\MailFolder;
 use Microsoft\Graph\Generated\Models\Message;
 use Microsoft\Graph\Generated\Models\MessageCollectionResponse;
 use Microsoft\Graph\Generated\Models\ODataErrors\ODataError;
 use Microsoft\Graph\Generated\Models\Recipient;
+use Microsoft\Graph\Generated\Models\ReferenceAttachment;
 use Microsoft\Graph\Generated\Users\Item\Messages\Item\CreateForward\CreateForwardRequestBuilder;
 use Microsoft\Graph\Generated\Users\Item\Messages\Item\CreateReply\CreateReplyRequestBuilder;
 use Microsoft\Graph\Generated\Users\Item\Messages\Item\CreateReplyAll\CreateReplyAllRequestBuilder;
@@ -138,7 +142,7 @@ it('saves a message with an existing folder', function (): void {
 it('saves a message with attachments', function (): void {
     $mailbox = Mailbox::factory()->create();
 
-    $attachment = new Attachment;
+    $attachment = new FileAttachment;
     $attachment->setName('file.pdf');
     $attachment->setContentType('application/pdf');
     $attachment->setSize(1024);
@@ -309,6 +313,59 @@ it('finds a message by user and message id', function (): void {
 
     expect($result->wait())->toBe($graphMessage);
 });
+
+it('resolves null when the message is not found', function (): void {
+    $error = new ODataError;
+    $error->setResponseStatusCode(404);
+
+    $messageItemBuilder = Mockery::mock(MessageItemRequestBuilder::class);
+    $messageItemBuilder->shouldReceive('get')->once()->andReturn(new RejectedPromise($error));
+
+    $messagesBuilder = Mockery::mock(MessagesRequestBuilder::class);
+    $messagesBuilder->shouldReceive('byMessageId')->with('msg-id')->once()->andReturn($messageItemBuilder);
+
+    $userBuilder = Mockery::mock(UserItemRequestBuilder::class);
+    $userBuilder->shouldReceive('messages')->once()->andReturn($messagesBuilder);
+
+    $usersBuilder = Mockery::mock(UsersRequestBuilder::class);
+    $usersBuilder->shouldReceive('byUserId')->with('user@test.com')->once()->andReturn($userBuilder);
+
+    $client = Mockery::mock(GraphServiceClient::class);
+    $client->shouldReceive('users')->once()->andReturn($usersBuilder);
+
+    $clientService = Mockery::mock(ClientService::class);
+    $clientService->shouldReceive('client')->once()->andReturn($client);
+
+    $service = new MessageService($clientService);
+
+    expect($service->find('user@test.com', 'msg-id')->wait())->toBeNull();
+});
+
+it('rejects when finding the message fails for another reason', function (): void {
+    $error = new ODataError;
+    $error->setResponseStatusCode(500);
+
+    $messageItemBuilder = Mockery::mock(MessageItemRequestBuilder::class);
+    $messageItemBuilder->shouldReceive('get')->once()->andReturn(new RejectedPromise($error));
+
+    $messagesBuilder = Mockery::mock(MessagesRequestBuilder::class);
+    $messagesBuilder->shouldReceive('byMessageId')->with('msg-id')->once()->andReturn($messageItemBuilder);
+
+    $userBuilder = Mockery::mock(UserItemRequestBuilder::class);
+    $userBuilder->shouldReceive('messages')->once()->andReturn($messagesBuilder);
+
+    $usersBuilder = Mockery::mock(UsersRequestBuilder::class);
+    $usersBuilder->shouldReceive('byUserId')->with('user@test.com')->once()->andReturn($userBuilder);
+
+    $client = Mockery::mock(GraphServiceClient::class);
+    $client->shouldReceive('users')->once()->andReturn($usersBuilder);
+
+    $clientService = Mockery::mock(ClientService::class);
+    $clientService->shouldReceive('client')->once()->andReturn($client);
+
+    $service = new MessageService($clientService);
+    $service->find('user@test.com', 'msg-id')->wait();
+})->throws(ODataError::class);
 
 // ──────────────────────────────────────────────────────────────────────────────
 // create() tests
@@ -713,12 +770,12 @@ it('saves in-reply-to and references from internet message headers', function ()
 it('saves a message with multiple attachments', function (): void {
     $mailbox = Mailbox::factory()->create();
 
-    $attachment1 = new Attachment;
+    $attachment1 = new FileAttachment;
     $attachment1->setName('file1.pdf');
     $attachment1->setContentType('application/pdf');
     $attachment1->setSize(1024);
 
-    $attachment2 = new Attachment;
+    $attachment2 = new FileAttachment;
     $attachment2->setName('file2.jpg');
     $attachment2->setContentType('image/jpeg');
     $attachment2->setSize(2048);
@@ -745,6 +802,46 @@ it('saves a message with multiple attachments', function (): void {
     $model = $service->save($mailbox, $graphMessage);
 
     expect($model)->toBeInstanceOf(MailboxMessage::class);
+});
+
+it('saves file attachments and skips item and reference attachments', function (): void {
+    Storage::fake('local');
+
+    $mailbox = Mailbox::factory()->create();
+
+    $item = new ItemAttachment;
+    $item->setName('Forwarded proof');
+
+    $file = new FileAttachment;
+    $file->setName('proof.pdf');
+    $file->setContentType('application/pdf');
+    $file->setSize(12);
+    $file->setLastModifiedDateTime(new DateTime('2026-11-13T13:04:58Z'));
+    $file->setContentBytes(Utils::streamFor(base64_encode('file content')));
+
+    $reference = new ReferenceAttachment;
+    $reference->setName('Shared folder');
+
+    $graphMessage = new Message;
+    $graphMessage->setId('msg-mixed-attach');
+    $graphMessage->setConversationId('conv-id');
+    $graphMessage->setSubject('Mixed Attachments');
+    $graphMessage->setIsRead(false);
+    $graphMessage->setIsDraft(false);
+    $graphMessage->setFlag((function (): FollowupFlag {
+        $flag = new FollowupFlag;
+        $flag->setFlagStatus(new FollowupFlagStatus('notFlagged'));
+
+        return $flag;
+    })());
+    $graphMessage->setHasAttachments(true);
+    $graphMessage->setAttachments([$item, $file, $reference]);
+    $graphMessage->setParentFolderId(null);
+
+    $service = new MessageService(Mockery::mock(ClientService::class));
+    $model = $service->save($mailbox, $graphMessage);
+
+    expect($model->attachments()->pluck('name')->all())->toBe(['proof.pdf']);
 });
 
 it('does not process attachments when hasAttachments is false', function (): void {

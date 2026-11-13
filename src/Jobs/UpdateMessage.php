@@ -38,6 +38,6 @@ class UpdateMessage implements ShouldQueue
             }
 
             Messages::save($this->mailbox, $message);
-        });
+        })->wait();
     }
 }
