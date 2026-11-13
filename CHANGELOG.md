@@ -1,5 +1,11 @@
 # [1.0.0-beta.10](https://github.com/ActiveEngagement/casey-jones-client/compare/v1.0.0-beta.9...v1.0.0-beta.10) (2024-12-19)
 
+## 1.1.1
+
+### Patch Changes
+
+- [#14](https://github.com/ActiveEngagement/mailbox/pull/14) [`a79ec15`](https://github.com/ActiveEngagement/mailbox/commit/a79ec1570390c696036442f4c2526bce474324ce) Thanks [@josephkerkhof](https://github.com/josephkerkhof)! - Only file attachments are saved. Item attachments (attached emails) and reference attachments (cloud links) no longer throw `Expected contentBytes to be a string or StreamInterface` during `mailbox:setup` and the message jobs. `CreateMessage`, `UpdateMessage` and `SaveFolder` now wait on their promise, so errors fail the job instead of being swallowed. `Messages::find()` and `Folders::find()` resolve to `null` when Graph returns 404.
+
 ## 1.1.0
 
 ### Minor Changes
