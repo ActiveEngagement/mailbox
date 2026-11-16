@@ -33,7 +33,6 @@ use Spatie\TypeScriptTransformer\Attributes\TypeScript;
  * @property int $size
  * @property string $content_type
  * @property string $path
- * @property string $url
  * @property string|null $contents
  * @property string $base64_contents
  * @property Carbon|null $last_modified_at
@@ -51,7 +50,6 @@ use Spatie\TypeScriptTransformer\Attributes\TypeScript;
     'content_type' => 'string',
     'disk' => 'string',
     'path' => 'string',
-    'url' => 'string',
     'last_modified_at' => 'string',
     'created_at' => 'string',
     'updated_at' => 'string',
@@ -80,15 +78,6 @@ class MailboxMessageAttachment extends Model
         'content_type',
         'path',
         'last_modified_at',
-    ];
-
-    /**
-     * The attributes that are appended.
-     *
-     * @var list<string>
-     */
-    protected $appends = [
-        'url',
     ];
 
     /**
@@ -146,18 +135,6 @@ class MailboxMessageAttachment extends Model
     protected function scopeName(Builder $query, string ...$name): void
     {
         $query->whereIn('name', $name);
-    }
-
-    /**
-     * Get the absolute url from storage.
-     *
-     * @return Attribute<string, never>
-     */
-    protected function url(): Attribute
-    {
-        return Attribute::make(
-            get: fn (): string => Storage::disk($this->disk)->url($this->path)
-        );
     }
 
     /**

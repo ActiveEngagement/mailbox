@@ -3,7 +3,6 @@
 use Actengage\Mailbox\Models\Mailbox;
 use Actengage\Mailbox\Models\MailboxMessage;
 use Actengage\Mailbox\Models\MailboxMessageAttachment;
-use Illuminate\Support\Facades\Storage;
 
 it('belongs to a mailbox and message of that mailbox', function (): void {
     $model = MailboxMessageAttachment::factory()->create();
@@ -11,12 +10,12 @@ it('belongs to a mailbox and message of that mailbox', function (): void {
     expect($model->message->mailbox->id)->toBe($model->mailbox->id);
 });
 
-it('has an absolute storage url', function (): void {
+it('does not expose a storage url when serialized', function (): void {
     $attachment = MailboxMessageAttachment::factory()->create([
         'name' => 'test.html',
     ]);
 
-    expect($attachment->url)->toBe(Storage::disk($attachment->disk)->url($attachment->path));
+    expect($attachment->toArray())->not->toHaveKey('url');
 });
 
 it('scopes the query by name', function (): void {
