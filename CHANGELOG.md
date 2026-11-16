@@ -1,5 +1,11 @@
 # [1.0.0-beta.10](https://github.com/ActiveEngagement/casey-jones-client/compare/v1.0.0-beta.9...v1.0.0-beta.10) (2024-12-19)
 
+## 2.0.0
+
+### Major Changes
+
+- [#16](https://github.com/ActiveEngagement/mailbox/pull/16) [`157d311`](https://github.com/ActiveEngagement/mailbox/commit/157d311c1d0edb19fb12000fef62de22b9eb9615) Thanks [@josephkerkhof](https://github.com/josephkerkhof)! - Remove the `url` attribute from `MailboxMessageAttachment`. The model no longer appends a public storage URL to its array and JSON output, and the `url` accessor is gone. Serve attachment files through an authenticated route that streams them from storage instead.
+
 ## 1.1.1
 
 ### Patch Changes
