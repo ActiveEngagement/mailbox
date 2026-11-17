@@ -7,12 +7,14 @@ namespace Actengage\Mailbox\Jobs;
 use Actengage\Mailbox\Facades\Client;
 use Actengage\Mailbox\Facades\Messages;
 use Actengage\Mailbox\Models\Mailbox;
+use Actengage\Mailbox\Support\PreventsMessageOverlap;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Microsoft\Graph\Generated\Models\Message;
 
 class UpdateMessage implements ShouldQueue
 {
+    use PreventsMessageOverlap;
     use Queueable;
 
     /**
