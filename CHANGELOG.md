@@ -1,5 +1,11 @@
 # [1.0.0-beta.10](https://github.com/ActiveEngagement/casey-jones-client/compare/v1.0.0-beta.9...v1.0.0-beta.10) (2024-12-19)
 
+## 2.0.1
+
+### Patch Changes
+
+- [#18](https://github.com/ActiveEngagement/mailbox/pull/18) [`c86a288`](https://github.com/ActiveEngagement/mailbox/commit/c86a288e7c56a12f7ba45861674a8be899668270) Thanks [@josephkerkhof](https://github.com/josephkerkhof)! - `CreateMessage` and `UpdateMessage` no longer race on the same message. Graph sends `created` and `updated` notifications at almost the same time, so both jobs inserted the message and the second failed on `mailbox_messages_hash_unique` or `mailbox_message_attachments_path_unique`. Both jobs now share a `WithoutOverlapping` lock per mailbox and message. A job that finds the lock taken is released for 10 seconds, with up to 10 tries and 1 exception.
+
 ## 2.0.0
 
 ### Major Changes
